@@ -7,34 +7,42 @@ interface Props {
   hint: Hint;
   isFirst: boolean;
   isLast: boolean;
-  onCell: (rowIndex: number, field: 'weight' | 'reps', value: string) => void;
+  onCell: (rowIndex: number, field: 'weight' | 'reps' | 'seconds', value: string) => void;
   onAddSet: () => void;
   onRemoveSet: () => void;
   onMove: (dir: -1 | 1) => void;
   onRemove: () => void;
 }
 
-/** One exercise: name, last time, suggestion, set rows, and the buttons to change them. */
+/** One exercise: name, PT notes, last time, suggestion, set rows, and the buttons to change them. */
 export default function ExerciseCard({ entry, hint, isFirst, isLast, onCell, onAddSet, onRemoveSet, onMove, onRemove }: Props) {
   const range = entry.minSets === entry.maxSets ? `${entry.minSets}` : `${entry.minSets}-${entry.maxSets}`;
+  const kind = entry.kind;
   return (
     <section className="card">
       <h2>{entry.name}</h2>
+      {entry.notes && <p className="notes">{entry.notes}</p>}
       <p>Recommended: {range} sets</p>
       <p className="muted">{hint.lastText}</p>
       {hint.suggestionText && <p className="suggest">{hint.suggestionText}</p>}
 
       <div className="rows">
-        <div className="row head">
+        <div className={kind === 'weightReps' ? 'row head' : 'row one head'}>
           <span />
-          <span>Weight (lb)</span>
-          <span>Reps</span>
+          {kind === 'weightReps' && <span>Weight (lb)</span>}
+          <span>{kind === 'timedHold' ? 'Seconds' : 'Reps'}</span>
         </div>
         {entry.rows.map((r, i) => (
-          <div className="row" key={i}>
+          <div className={kind === 'weightReps' ? 'row' : 'row one'} key={i}>
             <span className="setno">Set {i + 1}</span>
-            <NumberField decimal label={`${entry.name} set ${i + 1} weight in pounds`} value={r.weight} onChange={(v) => onCell(i, 'weight', v)} />
-            <NumberField label={`${entry.name} set ${i + 1} reps`} value={r.reps} onChange={(v) => onCell(i, 'reps', v)} />
+            {kind === 'weightReps' && (
+              <NumberField decimal label={`${entry.name} set ${i + 1} weight in pounds`} value={r.weight} onChange={(v) => onCell(i, 'weight', v)} />
+            )}
+            {kind === 'timedHold' ? (
+              <NumberField label={`${entry.name} set ${i + 1} seconds held`} value={r.seconds} onChange={(v) => onCell(i, 'seconds', v)} />
+            ) : (
+              <NumberField label={`${entry.name} set ${i + 1} reps`} value={r.reps} onChange={(v) => onCell(i, 'reps', v)} />
+            )}
           </div>
         ))}
       </div>

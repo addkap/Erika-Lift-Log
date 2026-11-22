@@ -4,8 +4,9 @@ import { DEFAULT_EXERCISES, DEFAULT_TEMPLATES } from './lib/defaults';
 import { addEntry, buildDraft, draftToWorkout, newEntry } from './lib/draft';
 import { newId } from './lib/ids';
 import { normalizeExercise } from './lib/model';
+import { addItem, setRange as setItemRange, templateFromDraft } from './lib/templates';
 import { hintFor } from './lib/progression';
-import type { Draft, ExerciseKind, Workout, WorkoutType } from './types';
+import type { Draft, Exercise, ExerciseKind, Template, Workout, WorkoutType } from './types';
 
 /** First run: load the preloaded exercises and workouts. Safe to call every startup. */
 export async function ensureSeeded(): Promise<void> {
@@ -87,4 +88,46 @@ export async function setSetRange(type: WorkoutType, exerciseId: string, minSets
   t.items = t.items.map((i) => (i.exerciseId === exerciseId ? { ...i, minSets, maxSets } : i));
   t.updatedAt = Date.now();
   await db.templates.put(t);
+}
+
+// ---------------------------------------------------------------- editing workouts (Settings)
+// Everything here only changes what FUTURE workouts start with. Saved workouts are never touched,
+// and nothing here deletes an exercise: "archive" hides it but keeps its history.
+
+/** Change one template (add, remove, reorder, rename...). */
+export async function updateTemplate(type: WorkoutType, fn: (t: Template) => Template): Promise<void> {
+  const t = await db.templates.get(type);
+  if (t) await db.templates.put(fn(t));
+}
+
+/** Create a brand-new exercise and add it to a workout's list. */
+export async function createExercise(
+  type: WorkoutType,
+  fields: Omit<Exercise, 'id' | 'updatedAt' | 'archived' | 'deletedAt'>,
+  sets: { min: number; max: number },
+): Promise<Exercise> {
+  const ex = normalizeExercise({ ...fields, id: newId(), updatedAt: Date.now() });
+  await db.transaction('rw', db.exercises, db.templates, async () => {
+    await db.exercises.add(ex);
+    await updateTemplate(type, (t) => setItemRange(addItem(t, ex.id, ex.updatedAt), ex.id, sets.min, sets.max, ex.updatedAt));
+  });
+  return ex;
+}
+
+/** Save edits to an exercise (name, kind, increment, auto-increase, rep goal, notes). */
+export async function saveExercise(id: string, fields: Partial<Omit<Exercise, 'id'>>): Promise<void> {
+  const cur = await db.exercises.get(id);
+  if (!cur) return;
+  await db.exercises.put(normalizeExercise({ ...cur, ...fields, id, updatedAt: Date.now() }));
+}
+
+/** Hide an exercise from every new workout and the add list (or bring it back). History is untouched. */
+export async function setArchived(id: string, archived: boolean): Promise<void> {
+  await db.exercises.update(id, { archived, updatedAt: Date.now() });
+}
+
+/** "Save these exercises as my new default": the template becomes this workout's list. */
+export async function saveDraftAsDefault(draft: Draft): Promise<void> {
+  const exercises = await db.exercises.toArray();
+  await updateTemplate(draft.type, (t) => templateFromDraft(t, draft.entries, exercises));
 }

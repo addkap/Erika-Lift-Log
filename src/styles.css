@@ -210,3 +210,13 @@ h1::after { width: 72px; background: linear-gradient(90deg, #6ea4bf, #c2efeb); }
 .tile { border-radius: 22px; }
 .num, .date, .text, .select { border-radius: 16px; }
 .tabbar { border-radius: 22px 22px 0 0; }
+
+/* ---- exercise notes, one-measure rows, editor ---- */
+.row.one { grid-template-columns: 64px 1fr; }
+.notes { margin: 6px 0; padding: 10px 12px; border-radius: 14px; background: #c2efeb; color: #331e36; font-weight: 600; }
+textarea.text { min-height: 112px; resize: vertical; }
+.pillrow { display: grid; gap: 8px; }
+.kindbtn { text-align: left; min-height: 56px; padding: 8px 14px; font: inherit; font-weight: 700; border: 2px solid var(--primary); border-radius: 16px; background: #fff; color: var(--text); cursor: pointer; }
+.kindbtn.selected { background: var(--primary); color: #fff; }
+.err-text { color: var(--err); font-weight: 700; }
+.hint { color: var(--muted); font-size: 18px; }

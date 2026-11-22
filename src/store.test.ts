@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from './db';
 import { addRow, removeEntry, setCell } from './lib/draft';
 import { SAMPLE_EXERCISES, SAMPLE_TEMPLATES } from './lib/testFixtures';
-import { addCustomExercise, ensureSeeded, finishWorkout, loadDraft, saveDraft, setIncrement, startWorkout } from './store';
+import { addCustomExercise, createExercise, discardDraft, ensureSeeded, finishWorkout, loadDraft, saveDraft, saveDraftAsDefault, saveExercise, setArchived, setIncrement, startWorkout, updateTemplate } from './store';
+import { addItem, moveItem, removeItem } from './lib/templates';
+import type { Draft } from './types';
 
 beforeEach(async () => {
   await Promise.all([db.exercises.clear(), db.templates.clear(), db.workouts.clear(), db.drafts.clear()]);
@@ -144,3 +146,79 @@ describe('exercise kinds and templates (stage 1)', () => {
     expect(d.entries[0].notes).toBe('Slow on the way down');
   });
 });
+
+describe('editing workouts in the app (stage 2)', () => {
+  const logOne = async () => {
+    let d = await startWorkout('lower', '2026-11-08');
+    d = setCell(d, d.entries[0].key, 0, 'weight', '120');
+    d = setCell(d, d.entries[0].key, 0, 'reps', '12');
+    return (await finishWorkout(d))!;
+  };
+
+  it('builds a workout from nothing: create exercises, order them, and start a workout from them', async () => {
+    await Promise.all([db.exercises.clear(), db.templates.clear()]);
+    await ensureSeeded(); // empty, like her first run
+    const a = await createExercise('upper', { name: 'Band row', kind: 'repsOnly', increment: 5, autoIncrease: false, repGoal: 12, notes: 'Green band' }, { min: 2, max: 3 });
+    const b = await createExercise('upper', { name: 'Wall sit', kind: 'timedHold', increment: 5, autoIncrease: false, repGoal: 12, notes: '' }, { min: 3, max: 3 });
+    await updateTemplate('upper', (t) => moveItem(t, b.id, -1));
+    const d = await startWorkout('upper', '2026-11-21');
+    expect(d.entries.map((e) => e.name)).toEqual(['Wall sit', 'Band row']);
+    expect(d.entries.map((e) => e.kind)).toEqual(['timedHold', 'repsOnly']);
+    expect(d.entries[0].rows).toHaveLength(3);
+    expect(d.entries[1].notes).toBe('Green band');
+    expect(a.updatedAt).toBeGreaterThan(0); // will sync
+  });
+
+  it('editing or removing from a template never changes a past workout', async () => {
+    const w = await logOne();
+    const before = JSON.stringify(await db.workouts.get(w.id));
+    await saveExercise('hack-squat', { name: 'Leg press', notes: 'new', increment: 2.5, autoIncrease: false });
+    await updateTemplate('lower', (t) => removeItem(t, 'hack-squat'));
+    await updateTemplate('lower', (t) => ({ ...t, name: 'Legs' }));
+    expect(JSON.stringify(await db.workouts.get(w.id))).toBe(before);
+    expect(await db.exercises.get('hack-squat')).toBeDefined(); // the exercise itself is still there
+  });
+
+  it('archiving hides an exercise from new workouts but keeps history, and restoring brings it back', async () => {
+    const w = await logOne();
+    await setArchived('hack-squat', true);
+    expect((await startWorkout('lower', '2026-11-22')).entries.map((e) => e.exerciseId)).not.toContain('hack-squat');
+    expect((await db.workouts.get(w.id))!.entries[0].exerciseId).toBe('hack-squat');
+    await setArchived('hack-squat', false);
+    expect((await startWorkout('lower', '2026-11-23')).entries[0].exerciseId).toBe('hack-squat');
+  });
+
+  it('edits are stamped so they sync, and decimal increments are kept', async () => {
+    await saveExercise('hack-squat', { increment: 1.25 });
+    const ex = (await db.exercises.get('hack-squat'))!;
+    expect(ex.increment).toBe(1.25);
+    expect(ex.updatedAt).toBeGreaterThan(0);
+    await updateTemplate('lower', (t) => addItem(t, 'chest-press'));
+    expect((await db.templates.get('lower'))!.updatedAt).toBeGreaterThan(0);
+  });
+
+  it('auto-increase off keeps the same weight; the rep goal can be changed', async () => {
+    await saveExercise('hack-squat', { autoIncrease: false });
+    let d = await startWorkout('lower', '2026-11-08');
+    for (let i = 0; i < 3; i++) { d = setCell(d, d.entries[0].key, i, 'weight', '100'); d = setCell(d, d.entries[0].key, i, 'reps', '12'); }
+    await finishWorkout(d);
+    expect((await startWorkout('lower', '2026-11-15')).entries[0].rows[0].weight).toBe('100');
+
+    await saveExercise('hack-squat', { autoIncrease: true, repGoal: 10, increment: 2.5 });
+    await discardDraft();
+    expect((await startWorkout('lower', '2026-11-16')).entries[0].rows[0].weight).toBe('102.5');
+  });
+
+  it('"save as my new default" makes the template match the workout in progress', async () => {
+    let d = await startWorkout('lower', '2026-11-21');
+    d = removeEntryByIndex(d, 0);
+    d = await addCustomExercise(d, { name: 'Wall sit', startWeight: '', keep: false, kind: 'timedHold' });
+    await saveDraftAsDefault(d);
+    const t = (await db.templates.get('lower'))!;
+    expect(t.items.map((i) => i.exerciseId)).toEqual(d.entries.map((e) => e.exerciseId));
+    expect(t.items.map((i) => i.exerciseId)).not.toContain('hack-squat');
+    expect(await db.exercises.get('hack-squat')).toBeDefined();
+  });
+});
+
+const removeEntryByIndex = (d: Draft, i: number) => removeEntry(d, d.entries[i].key);

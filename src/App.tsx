@@ -34,6 +34,7 @@ export default function App() {
     return 'Workout';
   });
   const [ready, setReady] = useState(false);
+  const [editorRequest, setEditorRequest] = useState(0); // goes up each time a page asks to open "Edit my workouts"
   const online = useOnline();
 
   // Load the preloaded workouts the first time the app runs.
@@ -60,10 +61,10 @@ export default function App() {
       <SyncChip />
       {!online && <p className="offline" role="status">Offline: your workouts are still saved on this phone.</p>}
       <main className="page">
-        {tab === 'Workout' && <WorkoutPage onGoSettings={() => setTab('Settings')} />}
+        {tab === 'Workout' && <WorkoutPage onGoSettings={() => setTab('Settings')} onEditWorkouts={() => { setEditorRequest((n) => n + 1); setTab('Settings'); }} />}
         {tab === 'History' && <HistoryPage />}
         {tab === 'Summary' && <SummaryPage />}
-        {tab === 'Settings' && <SettingsPage />}
+        {tab === 'Settings' && <SettingsPage key={editorRequest} startInEditor={editorRequest > 0} />}
       </main>
 
       {/* Bottom tab bar: big, text-only labels. */}
