@@ -5,7 +5,7 @@
 // You get it from the free app registration described in README.md.
 // It is not a secret (it is visible to anyone who opens the site).
 // ---------------------------------------------------------------------------
-export const MS_CLIENT_ID: string = '339a83cd-d197-4a3e-9474-12cf7a11b019';
+export const MS_CLIENT_ID: string = '103356ce-fabd-4cfe-9076-8753b3b9261e';
 
 /** The only file this app ever reads or writes in the OneDrive folder (see appIdentity.ts). */
 export { DATA_FILE_NAME } from './appIdentity';

@@ -78,18 +78,17 @@ GitHub Pages hosts the site for free with https (needed for installing and sign-
 ### The permission it asks for
 One Microsoft Graph permission: **`Files.ReadWrite`**. For personal Microsoft accounts it covers the signed-in person's own OneDrive and folders shared with them. It is broader than "one folder" because Microsoft offers no narrower permission that reaches a shared folder on personal accounts. The app's code only touches `erika-lift-log-data.json`.
 
-### Step A: Microsoft app registration (already done, one small addition)
-This app **reuses the same Microsoft app registration and client ID as the original Lift Log** (it is already in `src/config.ts`), and the same personal-accounts sign-in address (`https://login.microsoftonline.com/consumers`). So there is nothing new to register. You only need to tell Microsoft about this app's website address:
+### Step A: Microsoft app registration
+This app has **its own Microsoft app registration** (separate from the original Lift Log's). Its Application (client) ID, `103356ce-fabd-4cfe-9076-8753b3b9261e`, is already in `src/config.ts`; it is not a secret. Sign-in uses the personal-accounts address `https://login.microsoftonline.com/consumers`.
 
-1. Go to <https://entra.microsoft.com> and sign in with the personal Microsoft account that owns the registration.
-2. **Entra ID → App registrations →** the existing **Lift Log** registration.
-3. Left menu → **Authentication** → under **Single-page application** click **Add URI** and add exactly this (with `https`, the capital letters, and the final `/`):
+The registration must have these settings (Entra ID → App registrations → this app):
+1. **Supported account types:** personal Microsoft accounts (see Troubleshooting if sign-in complains about a tenant).
+2. **Authentication → Single-page application → Redirect URIs.** Each must match exactly, including `https`, the capital letters, and the final `/`:
+   - `https://addkap.github.io/Erika-Lift-Log/` (the real site)
+   - `http://localhost:5173/` (for `npm run dev`) and `http://localhost:4173/` (for `npm run preview`), only if you want to test sign-in on your computer
+3. **API permissions:** Microsoft Graph, Delegated, **`Files.ReadWrite`** (leave `openid`, `profile` and `offline_access`). No admin approval is needed for personal accounts.
 
-   **`https://addkap.github.io/Erika-Lift-Log/`**
-
-4. Click **Save**. Leave the permission (`Files.ReadWrite`) and everything else as it is. (`http://localhost:5173/` and `http://localhost:4173/` are already listed from the original app and also work for this one.)
-
-If sign-in ever says "redirect URI mismatch", the address in the browser's address bar is not in that list exactly. Compare them character by character.
+If sign-in ever says "redirect URI mismatch" or `invalid_request ... redirect_uri`, the address in the browser's address bar is not in that list exactly, or the client ID in `src/config.ts` belongs to a different registration. Compare character by character.
 
 ### Step B: Connect the folder
 **The folder's owner (it is in their "My files")**
@@ -181,7 +180,7 @@ This app and the original Lift Log are both hosted on `addkap.github.io`, and a 
 | Microsoft sign-in cache | `msal.*` | `erika-lift-log:msal.*` |
 | OneDrive file | `lift-log-data.json` | `erika-lift-log-data.json` |
 
-The Microsoft sign-in library cannot rename its storage keys itself, so `src/installStorageNamespace.ts` runs first at start-up and gives this app a private copy of "localStorage". Signing in or out of one app does not touch the other. `src/appIdentity.test.ts` fails if any of these names ever matches Lift Log's.
+Even though the two apps use different Microsoft registrations, the sign-in library stores its tokens under fixed names, so it cannot rename its storage keys itself, so `src/installStorageNamespace.ts` runs first at start-up and gives this app a private copy of "localStorage". Signing in or out of one app does not touch the other. `src/appIdentity.test.ts` fails if any of these names ever matches Lift Log's.
 
 One small thing is shared: Microsoft's library keeps a temporary encryption key in a browser-session cookie with a fixed name. Both apps reuse the same key, which is harmless.
 
