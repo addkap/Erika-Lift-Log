@@ -1,8 +1,9 @@
 // Sync settings for this device (which folder, when we last synced).
+import { SYNC_FOLDER_KEY } from '../appIdentity';
 import { db } from '../db';
 import type { SyncMeta } from '../types';
 
-const LS_KEY = 'lift-sync-folder';
+const LS_KEY = SYNC_FOLDER_KEY;
 
 export async function getMeta(): Promise<SyncMeta> {
   const m = await db.meta.get('sync');

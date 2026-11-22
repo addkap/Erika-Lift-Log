@@ -1,5 +1,6 @@
 // Local database (IndexedDB via Dexie). This is the source of truth for the app.
 import Dexie, { type Table } from 'dexie';
+import { DB_NAME } from './appIdentity';
 import { normalizeExercise, normalizeTemplate } from './lib/model';
 import type { Draft, Exercise, SyncMeta, Template, Workout } from './types';
 
@@ -11,7 +12,7 @@ class LiftDB extends Dexie {
   meta!: Table<SyncMeta, string>;
 
   constructor() {
-    super('lift-log');
+    super(DB_NAME);
     // Only indexed fields are listed here; other fields are stored automatically.
     this.version(1).stores({
       exercises: 'id',

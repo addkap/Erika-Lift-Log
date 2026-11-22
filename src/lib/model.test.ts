@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { SYNC_APP_TAG } from '../appIdentity';
 import { normalizeExercise, normalizeTemplate, templateName, workoutName } from './model';
 import { parseSyncData } from '../sync/merge';
 
@@ -15,6 +16,9 @@ describe('older data gets sensible defaults', () => {
   it('reps-only and timed-hold exercises never auto-increase', () => {
     expect(normalizeExercise({ id: 'a', name: 'x', kind: 'repsOnly', autoIncrease: true, updatedAt: 1 }).autoIncrease).toBe(false);
     expect(normalizeExercise({ id: 'a', name: 'x', kind: 'timedHold', updatedAt: 1 }).autoIncrease).toBe(false);
+  });
+  it('a physical therapy template with no name gets its default name', () => {
+    expect(normalizeTemplate({ id: 'pt', items: [], updatedAt: 1 }).name).toBe('Physical Therapy');
   });
   it('a template with no name gets the default name', () => {
     expect(normalizeTemplate({ id: 'upper', items: [], updatedAt: 1 }).name).toBe('Upper Body');
@@ -38,7 +42,7 @@ describe('names', () => {
 describe('importing older files', () => {
   it('fills in the new fields when reading a file from before this version', () => {
     const text = JSON.stringify({
-      app: 'lift-log', version: 1, savedAt: 1,
+      app: SYNC_APP_TAG, version: 1, savedAt: 1,
       exercises: [{ id: 'a', name: 'A', increment: 5, updatedAt: 1 }],
       templates: [{ id: 'lower', items: [], updatedAt: 1 }],
       workouts: [],

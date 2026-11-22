@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { SW_CACHE_ID } from './src/appIdentity.ts';
 
 // GitHub Pages serves the site from a sub-path like /lift-log/. The deploy workflow sets VITE_BASE for that.
 // Locally (and on hosts that give the site its own address) it stays "/".
@@ -32,6 +33,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cacheId: SW_CACHE_ID, // this app's offline cache is named after it, never mixed with Lift Log's
         globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest}'],
         navigateFallback: 'index.html', // any page address opens the app, even offline
       },

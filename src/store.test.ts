@@ -16,13 +16,13 @@ beforeEach(async () => {
 });
 
 describe('store', () => {
-  it('starts with three empty, named workouts and no exercises', async () => {
+  it('starts with four empty, named workouts (including Physical Therapy) and no exercises', async () => {
     await Promise.all([db.exercises.clear(), db.templates.clear()]);
     await ensureSeeded();
     await ensureSeeded(); // safe to repeat
     expect(await db.exercises.count()).toBe(0);
     const templates = await db.templates.toArray();
-    expect(templates.map((t) => t.id).sort()).toEqual(['full', 'lower', 'upper']);
+    expect(templates.map((t) => t.id).sort()).toEqual(['full', 'lower', 'pt', 'upper']);
     expect(templates.every((t) => t.items.length === 0 && t.name.length > 0)).toBe(true);
   });
 
@@ -222,3 +222,44 @@ describe('editing workouts in the app (stage 2)', () => {
 });
 
 const removeEntryByIndex = (d: Draft, i: number) => removeEntry(d, d.entries[i].key);
+
+describe('Physical Therapy workout', () => {
+  it('is named, empty and selectable like the others', async () => {
+    const pt = (await db.templates.get('pt'))!;
+    expect(pt).toMatchObject({ name: 'Physical Therapy', items: [] });
+    const d = await startWorkout('pt', '2026-11-21');
+    expect(d.type).toBe('pt');
+    expect(d.typeName).toBe('Physical Therapy');
+    expect(d.entries).toEqual([]);
+  });
+
+  it('a phone that only had Lower / Upper / Full gets Physical Therapy added, keeping everything else', async () => {
+    await db.templates.delete('pt');
+    expect(await db.templates.count()).toBe(3);
+    await ensureSeeded();
+    expect(await db.templates.count()).toBe(4);
+    expect((await db.templates.get('lower'))!.items).toHaveLength(5); // untouched
+  });
+
+  it('can be built, logged and saved with its own name, apart from the other workouts', async () => {
+    const band = await createExercise('pt', { name: 'Band walks', kind: 'repsOnly', increment: 5, autoIncrease: false, repGoal: 12, notes: '' }, { min: 2, max: 3 });
+    const hold = await createExercise('pt', { name: 'Single-leg stand', kind: 'timedHold', increment: 5, autoIncrease: false, repGoal: 12, notes: '' }, { min: 3, max: 3 });
+    expect((await db.templates.get('lower'))!.items.map((i) => i.exerciseId)).not.toContain(band.id);
+    let d = await startWorkout('pt', '2026-11-21');
+    expect(d.entries.map((e) => e.exerciseId)).toEqual([band.id, hold.id]);
+    d = setCell(d, d.entries[0].key, 0, 'reps', '15');
+    d = setCell(d, d.entries[1].key, 0, 'seconds', '30');
+    const w = (await finishWorkout(d))!;
+    expect(w).toMatchObject({ type: 'pt', typeName: 'Physical Therapy' });
+  });
+
+  it('can be renamed without changing past physical therapy workouts', async () => {
+    let d = await startWorkout('pt', '2026-11-08');
+    d = await addCustomExercise(d, { name: 'Clamshells', startWeight: '', keep: false, kind: 'repsOnly' });
+    d = setCell(d, d.entries[0].key, 0, 'reps', '12');
+    const w = (await finishWorkout(d))!;
+    await updateTemplate('pt', (t) => ({ ...t, name: 'My PT', updatedAt: 9 }));
+    expect((await db.workouts.get(w.id))!.typeName).toBe('Physical Therapy');
+    expect((await startWorkout('pt', '2026-11-15')).typeName).toBe('My PT');
+  });
+});

@@ -12,7 +12,10 @@ import type { Draft, Exercise, ExerciseKind, Template, Workout, WorkoutType } fr
 export async function ensureSeeded(): Promise<void> {
   await db.transaction('rw', db.exercises, db.templates, async () => {
     if ((await db.exercises.count()) === 0) await db.exercises.bulkAdd(DEFAULT_EXERCISES);
-    if ((await db.templates.count()) === 0) await db.templates.bulkAdd(DEFAULT_TEMPLATES);
+    // Add any workout that is missing (this is how a phone that only had Lower/Upper/Full gets Physical Therapy).
+    const have = new Set(await db.templates.toCollection().primaryKeys());
+    const missing = DEFAULT_TEMPLATES.filter((t) => !have.has(t.id));
+    if (missing.length) await db.templates.bulkAdd(missing);
   });
 }
 

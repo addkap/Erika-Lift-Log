@@ -2,10 +2,11 @@
 // Sign-in uses a full-page redirect because pop-ups do not work in an iPhone Home Screen app.
 
 import type { AccountInfo, IPublicClientApplication } from '@azure/msal-browser';
+import { RETURN_TAB_KEY } from '../appIdentity';
 import { GRAPH_SCOPES, MS_CLIENT_ID } from '../config';
 import { NeedsAuthError } from './graph';
 
-export const RETURN_TAB_KEY = 'lift-return-tab';
+export { RETURN_TAB_KEY };
 
 export const isConfigured = () => MS_CLIENT_ID.trim().length > 0;
 

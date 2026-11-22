@@ -1,3 +1,4 @@
+import { SYNC_APP_TAG } from '../appIdentity';
 import { describe, expect, it } from 'vitest';
 import type { Workout } from '../types';
 import { emptyData, mergeCollections, mergeData, parseSyncData, sameVersions, signature, type SyncData } from './merge';
@@ -56,14 +57,15 @@ describe('signature', () => {
 
 describe('parseSyncData', () => {
   it('accepts a valid file and drops junk records', () => {
-    const text = JSON.stringify({ app: 'lift-log', version: 1, workouts: [wk('a', 1), { nope: true }] });
+    const text = JSON.stringify({ app: SYNC_APP_TAG, version: 1, workouts: [wk('a', 1), { nope: true }] });
     const d = parseSyncData(text);
     expect(d.workouts).toHaveLength(1);
     expect(d.exercises).toEqual([]);
   });
   it('rejects other files with a friendly message', () => {
     expect(() => parseSyncData('not json')).toThrow('not valid JSON');
-    expect(() => parseSyncData('{"hello":1}')).toThrow('not a Lift Log');
-    expect(() => parseSyncData('{"app":"lift-log","version":9}')).toThrow('newer version');
+    expect(() => parseSyncData('{"hello":1}')).toThrow('not a data file from this app');
+    expect(() => parseSyncData('{"app":"lift-log","version":1}')).toThrow('not a data file from this app'); // Lift Log's own file is refused
+    expect(() => parseSyncData(`{"app":"${SYNC_APP_TAG}","version":9}`)).toThrow('newer version');
   });
 });

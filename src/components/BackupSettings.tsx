@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BACKUP_FILE_PREFIX } from '../appIdentity';
 import { todayLocal } from '../lib/dates';
 import { applyMerge, readLocalData } from '../sync/local';
 import { parseSyncData } from '../sync/merge';
@@ -13,7 +14,7 @@ export default function BackupSettings() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `lift-log-backup-${todayLocal()}.json`;
+    a.download = `${BACKUP_FILE_PREFIX}${todayLocal()}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 10000);
     setError('');

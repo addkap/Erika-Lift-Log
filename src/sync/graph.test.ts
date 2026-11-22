@@ -1,4 +1,6 @@
+import { SYNC_APP_TAG } from '../appIdentity';
 import { describe, expect, it } from 'vitest';
+import { DATA_FILE_NAME } from '../appIdentity';
 import { emptyData } from './merge';
 import { NeedsAuthError, encodeSharingUrl, listFolders, makeGraphRemote, resolveSharingLink, type FetchFn } from './graph';
 
@@ -60,23 +62,23 @@ describe('sharing link', () => {
 });
 
 describe('data file', () => {
-  it('only ever touches lift-log-data.json by name, and reads the eTag before the contents', async () => {
+  it('only ever touches the data file by name, and reads the eTag before the contents', async () => {
     const data = { ...emptyData(), savedAt: 5 };
     const f = fakeFetch((url) => {
-      if (url.includes(':/lift-log-data.json?')) return json({ id: 'FILE1', eTag: '"E1"', size: 50 });
+      if (url.includes(`:/${DATA_FILE_NAME}?`)) return json({ id: 'FILE1', eTag: '"E1"', size: 50 });
       if (url.endsWith('/items/FILE1/content')) return new Response(JSON.stringify(data));
       return json({}, 500);
     });
     const r = await makeGraphRemote(folder, token, f.fn).read();
     expect(r.etag).toBe('"E1"');
-    expect(r.data?.app).toBe('lift-log');
+    expect(r.data?.app).toBe(SYNC_APP_TAG);
     expect(f.calls.map((c) => c.url.replace('https://graph.microsoft.com/v1.0', ''))).toEqual([
-      '/drives/D1/items/F1:/lift-log-data.json?$select=id,eTag,size',
+      `/drives/D1/items/F1:/${DATA_FILE_NAME}?$select=id,eTag,size`,
       '/drives/D1/items/FILE1/content',
     ]);
   });
   it('a missing file means "create it"; an unreachable folder is an error', async () => {
-    const missing = fakeFetch((url) => (url.includes(':/lift-log-data.json') ? json({}, 404) : json({ id: 'F1' })));
+    const missing = fakeFetch((url) => (url.includes(`:/${DATA_FILE_NAME}`) ? json({}, 404) : json({ id: 'F1' })));
     expect(await makeGraphRemote(folder, token, missing.fn).read()).toEqual({ etag: null, data: null });
     const gone = fakeFetch(() => json({}, 404));
     await expect(makeGraphRemote(folder, token, gone.fn).read()).rejects.toThrow('could not be found');

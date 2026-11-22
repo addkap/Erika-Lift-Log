@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DATA_FILE_NAME } from '../appIdentity';
 import { getToken } from '../sync/auth';
 import { getStatus, syncNow } from '../sync/engine';
 import { listFolders, resolveSharingLink, type FolderChoice } from '../sync/graph';
@@ -28,7 +29,7 @@ export default function FolderPicker({ onDone, onCancel }: { onDone: () => void;
     return () => { current = false; };
   }, [here]);
 
-  /** Remember the folder, then sync right away (this creates lift-log-data.json if it is not there). */
+  /** Remember the folder, then sync right away (this creates the data file if it is not there). */
   async function choose(folder: FolderChoice) {
     setBusy(true);
     setError('');
@@ -56,7 +57,7 @@ export default function FolderPicker({ onDone, onCancel }: { onDone: () => void;
   return (
     <>
       <h1>Choose the data folder</h1>
-      <p>Pick the family folder where Lift Log keeps one file, <strong>lift-log-data.json</strong>. Nothing else in the folder is touched.</p>
+      <p>Pick the OneDrive folder where this app keeps one file, <strong>{DATA_FILE_NAME}</strong>. Nothing else in the folder is touched.</p>
 
       <section className="card">
         <h2>Folders in My files</h2>

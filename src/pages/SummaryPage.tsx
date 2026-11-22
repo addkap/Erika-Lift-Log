@@ -5,7 +5,7 @@ import { db } from '../db';
 import { formatShortDate, formatWeekday, todayLocal } from '../lib/dates';
 import { RANGES, exerciseSessions, exerciseView, loggedExercises, rangeStart, summarize, type Range } from '../lib/stats';
 import { templateName } from '../lib/model';
-import type { WorkoutType } from '../types';
+import { WORKOUT_TYPES } from '../types';
 
 // Palette colours for the charts (both clear 3:1 against white).
 const BLUE = '#034078'; // deep blue
@@ -70,7 +70,7 @@ export default function SummaryPage() {
 
       <section className="card">
         <h2>By workout type</h2>
-        {(['lower', 'upper', 'full'] as WorkoutType[]).map((t) => (
+        {WORKOUT_TYPES.map((t) => (
           <div className="type-line" key={t}><span>{templateName(templates, t)}</span><span>{summary.byType[t]}</span></div>
         ))}
       </section>

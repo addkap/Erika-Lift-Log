@@ -4,11 +4,12 @@
 // newer updatedAt wins. A deleted record is kept as a "tombstone" (deletedAt set) so the deletion
 // travels to the other device instead of the record coming back.
 
+import { SYNC_APP_TAG } from '../appIdentity';
 import { normalizeExercise, normalizeTemplate } from '../lib/model';
 import type { Exercise, Template, Workout } from '../types';
 
 export interface SyncData {
-  app: 'lift-log';
+  app: typeof SYNC_APP_TAG;
   version: 1;
   savedAt: number;
   exercises: Exercise[];
@@ -23,7 +24,7 @@ export interface RemoteStore {
   write(data: SyncData, etag: string | null): Promise<'ok' | 'conflict'>;
 }
 
-export const emptyData = (): SyncData => ({ app: 'lift-log', version: 1, savedAt: 0, exercises: [], templates: [], workouts: [] });
+export const emptyData = (): SyncData => ({ app: SYNC_APP_TAG, version: 1, savedAt: 0, exercises: [], templates: [], workouts: [] });
 
 interface Rec { id: string; updatedAt: number; deletedAt?: number }
 
@@ -85,7 +86,7 @@ export function sameVersions(a: SyncData, b: SyncData): boolean {
   return signature(a) === signature(b);
 }
 
-/** Read and check a Lift Log JSON file (from OneDrive or from a backup). Throws a friendly Error if it is wrong. */
+/** Read and check a JSON data file (from OneDrive or from a backup). Throws a friendly Error if it is wrong. */
 export function parseSyncData(text: string): SyncData {
   let raw: Record<string, unknown>;
   try {
@@ -93,12 +94,12 @@ export function parseSyncData(text: string): SyncData {
   } catch {
     throw new Error('That file is not valid JSON.');
   }
-  if (!raw || typeof raw !== 'object' || raw.app !== 'lift-log') throw new Error('That is not a Lift Log data file.');
-  if (typeof raw.version === 'number' && raw.version > 1) throw new Error('That file is from a newer version of Lift Log. Update the app first.');
+  if (!raw || typeof raw !== 'object' || raw.app !== SYNC_APP_TAG) throw new Error('That is not a data file from this app.');
+  if (typeof raw.version === 'number' && raw.version > 1) throw new Error('That file is from a newer version of this app. Update the app first.');
   const records = <T,>(v: unknown): T[] =>
     Array.isArray(v) ? v.filter((x) => x && typeof x.id === 'string' && typeof x.updatedAt === 'number') : [];
   return {
-    app: 'lift-log',
+    app: SYNC_APP_TAG,
     version: 1,
     savedAt: typeof raw.savedAt === 'number' ? raw.savedAt : 0,
     exercises: records<Exercise>(raw.exercises).map(normalizeExercise),

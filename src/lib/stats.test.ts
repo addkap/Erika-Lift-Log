@@ -24,7 +24,7 @@ describe('summary', () => {
     expect(s.total).toBe(3);
     expect(s.avgPerWeek).toBe(0.75);
     expect(s.weeksWith2Plus).toBe(1);
-    expect(s.byType).toEqual({ lower: 1, upper: 1, full: 1 });
+    expect(s.byType).toEqual({ lower: 1, upper: 1, full: 1, pt: 0 });
   });
   it('Saturday + Sunday count as one week', () => {
     const s = summarize([w('2026-11-21'), w('2026-11-22')], '4w', '2026-11-22');
@@ -173,5 +173,14 @@ describe('editing a saved hold or bodyweight workout (stage 3)', () => {
     expect(applyDraftToWorkout(saved, d)!.entries).toHaveLength(1);
     d = setCell(d, d.entries[1].key, 0, 'reps', '');
     expect(applyDraftToWorkout(saved, d)).toBeNull();
+  });
+});
+
+describe('Physical Therapy in the summary', () => {
+  it('counts physical therapy workouts separately', () => {
+    const w = (id: string, type: Workout['type']): Workout => ({ id, date: '2026-11-17', type, entries: [], createdAt: 1, updatedAt: 1 });
+    const s = summarize([w('a', 'pt'), w('b', 'pt'), w('c', 'lower')], 'all', '2026-11-21');
+    expect(s.byType).toEqual({ lower: 1, upper: 0, full: 0, pt: 2 });
+    expect(s.total).toBe(3);
   });
 });

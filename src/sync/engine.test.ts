@@ -6,7 +6,7 @@ import { markDeleted } from '../lib/draft';
 import type { Workout } from '../types';
 import { NeedsAuthError } from './graph';
 import { getStatus, refreshStatus, runCycle, setRemoteFactory, syncNow } from './engine';
-import { parseSyncData, type RemoteStore, type SyncData } from './merge';
+import { emptyData, parseSyncData, type RemoteStore, type SyncData } from './merge';
 import { saveMeta } from './meta';
 
 /** A pretend OneDrive file with real eTag behaviour. `beforeWrite` lets a test act as "the other phone". */
@@ -29,7 +29,7 @@ class FakeRemote implements RemoteStore {
   }
   /** Simulate the other phone adding a workout directly to the file. */
   otherPhoneAdds(w: Workout) {
-    const d = this.text ? parseSyncData(this.text) : { app: 'lift-log' as const, version: 1 as const, savedAt: 0, exercises: [], templates: [], workouts: [] };
+    const d = this.text ? parseSyncData(this.text) : emptyData();
     d.workouts.push(w);
     this.text = JSON.stringify(d); this.version++;
   }

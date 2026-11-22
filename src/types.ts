@@ -1,12 +1,15 @@
 // Shared data types. Everything that will sync later has an `id` and `updatedAt`.
 
-export type WorkoutType = 'lower' | 'upper' | 'full';
+/** The workouts she can pick from, in the order they are shown. */
+export const WORKOUT_TYPES = ['lower', 'upper', 'full', 'pt'] as const;
+export type WorkoutType = (typeof WORKOUT_TYPES)[number];
 
-/** The starting names for the three workout types. Each template stores its own (editable) name. */
+/** The starting names for the workout types. Each template stores its own (editable) name. */
 export const DEFAULT_WORKOUT_NAMES: Record<WorkoutType, string> = {
   lower: 'Lower Body',
   upper: 'Upper Body',
   full: 'Full Body',
+  pt: 'Physical Therapy',
 };
 
 /**
@@ -103,7 +106,7 @@ export interface Draft {
 
 // ---- OneDrive sync settings (this device only, never uploaded) ----
 
-/** The OneDrive folder that holds lift-log-data.json. */
+/** The OneDrive folder that holds the data file. */
 export interface FolderRef {
   driveId: string;
   itemId: string;

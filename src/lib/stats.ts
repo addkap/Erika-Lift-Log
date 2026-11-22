@@ -1,5 +1,5 @@
 // Numbers for the Summary page. All pure functions of the saved workouts.
-import type { ExerciseKind, Workout, WorkoutType } from '../types';
+import { WORKOUT_TYPES, type ExerciseKind, type Workout, type WorkoutType } from '../types';
 import { addDays, weekStart } from './dates';
 import { entryKind, isLogged } from './model';
 import { formatWeight } from './progression';
@@ -55,8 +55,8 @@ export function summarize(all: Workout[], range: Range, today: string): Summary 
   const weeks: WeekCount[] = [];
   for (let wk = start; wk <= endWeek; wk = addDays(wk, 7)) weeks.push({ week: wk, count: counts.get(wk) ?? 0 });
 
-  const byType: Record<WorkoutType, number> = { lower: 0, upper: 0, full: 0 };
-  for (const w of inRange) byType[w.type]++;
+  const byType = Object.fromEntries(WORKOUT_TYPES.map((t) => [t, 0])) as Record<WorkoutType, number>;
+  for (const w of inRange) byType[w.type] = (byType[w.type] ?? 0) + 1;
 
   // The 1 week view shows one bar per day instead of one bar total.
   const days = range === '1w'

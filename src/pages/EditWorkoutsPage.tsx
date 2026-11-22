@@ -9,9 +9,9 @@ import {
   DEFAULT_MAX_SETS, DEFAULT_MIN_SETS, addItem, isUsable, moveItem, nameTaken, removeItem, renameTemplate, setRange, visibleItems,
 } from '../lib/templates';
 import { createExercise, saveExercise, setArchived, updateTemplate } from '../store';
-import type { Exercise, ExerciseKind, Template, WorkoutType } from '../types';
+import { WORKOUT_TYPES, type Exercise, type ExerciseKind, type Template, type WorkoutType } from '../types';
 
-const TYPES: WorkoutType[] = ['lower', 'upper', 'full'];
+const TYPES: readonly WorkoutType[] = WORKOUT_TYPES;
 const KINDS: ExerciseKind[] = ['weightReps', 'repsOnly', 'timedHold'];
 
 type View =
@@ -181,11 +181,12 @@ function ExerciseScreen(props: { template: Template; exercises: Exercise[]; exer
   const hasHistory = !!existing && workouts.some((w) => !w.deletedAt && w.entries.some((e) => e.exerciseId === existing.id));
 
   const [name, setName] = useState(existing?.name ?? '');
-  const [kind, setKind] = useState<ExerciseKind>(existing?.kind ?? 'weightReps');
+  // Physical therapy exercises are usually bodyweight or band work, so that is the starting choice there.
+  const [kind, setKind] = useState<ExerciseKind>(existing?.kind ?? (template.id === 'pt' ? 'repsOnly' : 'weightReps'));
   const [minSets, setMinSets] = useState(String(item?.minSets ?? DEFAULT_MIN_SETS));
   const [maxSets, setMaxSets] = useState(String(item?.maxSets ?? DEFAULT_MAX_SETS));
   const [increment, setIncrement] = useState(String(existing?.increment ?? 5));
-  const [auto, setAuto] = useState(existing?.autoIncrease ?? true);
+  const [auto, setAuto] = useState(existing?.autoIncrease ?? template.id !== 'pt');
   const [goal, setGoal] = useState(String(existing?.repGoal ?? DEFAULT_REP_GOAL));
   const [notes, setNotes] = useState(existing?.notes ?? '');
   const [error, setError] = useState('');

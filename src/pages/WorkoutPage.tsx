@@ -7,7 +7,7 @@ import { formatLongDate, todayLocal } from '../lib/dates';
 import { hintFor } from '../lib/progression';
 import { KIND_LABELS, templateName } from '../lib/model';
 import { draftMatchesTemplate } from '../lib/templates';
-import { DEFAULT_WORKOUT_NAMES, type Draft, type Exercise, type ExerciseKind, type Template, type Workout, type WorkoutType } from '../types';
+import { DEFAULT_WORKOUT_NAMES, WORKOUT_TYPES, type Draft, type Exercise, type ExerciseKind, type Template, type Workout, type WorkoutType } from '../types';
 import ExerciseCard from '../components/ExerciseCard';
 import { isConfigured } from '../sync/auth';
 import { useSyncStatus } from '../sync/useSyncStatus';
@@ -108,7 +108,7 @@ function StartScreen({ saved, onStart, onGoSettings, onEditWorkouts }: { saved: 
 
       <p className="label">Which workout?</p>
       <div className="choices">
-        {(['lower', 'upper', 'full'] as WorkoutType[]).map((t) => (
+        {WORKOUT_TYPES.map((t) => (
           <button key={t} className={type === t ? 'choice selected' : 'choice'} aria-pressed={type === t} onClick={() => setType(t)}>
             {templateName(templates, t)}
           </button>

@@ -1,10 +1,11 @@
 // Reading and merging the local database for sync.
+import { SYNC_APP_TAG } from '../appIdentity';
 import { db } from '../db';
 import { mergeData, type SyncData } from './merge';
 
 export async function readLocalData(): Promise<SyncData> {
   const [exercises, templates, workouts] = await Promise.all([db.exercises.toArray(), db.templates.toArray(), db.workouts.toArray()]);
-  return { app: 'lift-log', version: 1, savedAt: Date.now(), exercises, templates, workouts };
+  return { app: SYNC_APP_TAG, version: 1, savedAt: Date.now(), exercises, templates, workouts };
 }
 
 /**

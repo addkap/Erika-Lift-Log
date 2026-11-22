@@ -7,8 +7,8 @@
 // ---------------------------------------------------------------------------
 export const MS_CLIENT_ID: string = '339a83cd-d197-4a3e-9474-12cf7a11b019';
 
-/** The only file this app ever reads or writes in the family folder. */
-export const DATA_FILE_NAME = 'lift-log-data.json';
+/** The only file this app ever reads or writes in the OneDrive folder (see appIdentity.ts). */
+export { DATA_FILE_NAME } from './appIdentity';
 
 /**
  * The one Microsoft Graph permission we ask for. For personal Microsoft accounts it covers the
