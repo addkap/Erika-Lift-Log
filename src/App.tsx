@@ -55,9 +55,8 @@ export default function App() {
       {/* All pages stay mounted-on-demand; the Workout page reloads its draft from storage itself. */}
       <header className="banner-top">
         <span className="brand">Lift Log</span>
-        <span className="cheer">Go Bills!</span>
       </header>
-      {/* Reassure him: everything still saves on the phone with no signal. */}
+      {/* Reassure her: everything still saves on the phone with no signal. */}
       <SyncChip />
       {!online && <p className="offline" role="status">Offline: your workouts are still saved on this phone.</p>}
       <main className="page">

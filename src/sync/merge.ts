@@ -4,6 +4,7 @@
 // newer updatedAt wins. A deleted record is kept as a "tombstone" (deletedAt set) so the deletion
 // travels to the other device instead of the record coming back.
 
+import { normalizeExercise, normalizeTemplate } from '../lib/model';
 import type { Exercise, Template, Workout } from '../types';
 
 export interface SyncData {
@@ -100,8 +101,8 @@ export function parseSyncData(text: string): SyncData {
     app: 'lift-log',
     version: 1,
     savedAt: typeof raw.savedAt === 'number' ? raw.savedAt : 0,
-    exercises: records<Exercise>(raw.exercises),
-    templates: records<Template>(raw.templates),
+    exercises: records<Exercise>(raw.exercises).map(normalizeExercise),
+    templates: records<Template>(raw.templates).map(normalizeTemplate),
     workouts: records<Workout>(raw.workouts),
   };
 }

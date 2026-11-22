@@ -3,7 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
 import { setIncrement, setSetRange } from '../store';
 import { sanitizeNumber } from '../lib/draft';
-import { WORKOUT_LABELS, type WorkoutType } from '../types';
+import { templateName } from '../lib/model';
+import type { WorkoutType } from '../types';
 import BackupSettings from '../components/BackupSettings';
 import OneDriveSettings from '../components/OneDriveSettings';
 
@@ -65,7 +66,7 @@ export default function SettingsPage() {
         if (!t) return null;
         return (
           <section className="card" key={type}>
-            <h2>{WORKOUT_LABELS[type]}: sets</h2>
+            <h2>{templateName(templates, type)}: sets</h2>
             <p className="muted">Recommended range (from – to).</p>
             {t.items.map((item) => (
               <div className="setting" key={item.exerciseId}>
@@ -85,7 +86,7 @@ export default function SettingsPage() {
         {protectedStorage ? (
           <p>Protected: the phone will keep your workouts safe.</p>
         ) : (
-          <p>Not protected yet. Add Lift Log to the Home Screen so the phone keeps your workouts safe.</p>
+          <p>Not protected yet. Add this app to the Home Screen so the phone keeps your workouts safe.</p>
         )}
       </section>
 

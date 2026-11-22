@@ -1,9 +1,10 @@
-// Draws the app icon (a white dumbbell on Bills blue with a red stripe) as PNG files.
+// Draws the app icon (a pale-aqua kettlebell on an indigo-to-steel-blue gradient) as PNG files.
 // No image libraries needed: it writes the pixels itself. Run with: node scripts/make-icons.mjs
 import { deflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
-const BLUE = [0, 51, 141], RED = [198, 12, 48], WHITE = [255, 255, 255], NAVY = [12, 35, 64];
+const INDIGO = [65, 51, 122], STEEL = [110, 164, 191], FROZEN = [194, 239, 235];
+const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 
 // CRC32 (PNG chunks need it)
 const table = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
@@ -16,24 +17,28 @@ function chunk(type, data) {
 }
 
 function icon(size) {
+  // Bloom kettlebell: a frozen-water bell with a steel-blue centre on an indigo-to-steel-blue gradient.
+  // Circles with 4x4 sub-samples per pixel for smooth edges. Everything stays inside the middle 70%
+  // so round/masked icons never crop it.
   const px = Buffer.alloc(size * size * 3);
-  const fill = (x0, y0, x1, y1, color) => { // rectangle in 0..1 coordinates
-    for (let y = Math.round(y0 * size); y < Math.round(y1 * size); y++)
-      for (let x = Math.round(x0 * size); x < Math.round(x1 * size); x++) px.set(color, (y * size + x) * 3);
+  const SUB = 4;
+  const colorAt = (x, y) => {
+    const d = (cx, cy) => Math.hypot(x - cx, y - cy);
+    if (d(0.5, 0.63) < 0.08) return STEEL; // centre spot on the bell
+    if (d(0.5, 0.63) < 0.25) return FROZEN; // bell
+    const h = d(0.5, 0.40);
+    if (h < 0.24 && h > 0.15 && y < 0.46) return FROZEN; // handle (upper half of a ring)
+    return mix(INDIGO, STEEL, Math.min(1, Math.max(0, (x + y) / 2 - 0.15) * 1.4)); // indigo fading to steel blue
   };
-  fill(0, 0, 1, 1, BLUE);
-  fill(0, 0.80, 1, 0.86, WHITE);            // racing stripes along the bottom
-  fill(0, 0.86, 1, 0.92, RED);
-  // Everything important stays inside the middle 70% so round/masked icons never crop it.
-  fill(0.28, 0.465, 0.72, 0.535, WHITE);     // bar
-  fill(0.22, 0.30, 0.30, 0.70, WHITE);       // inner plates
-  fill(0.70, 0.30, 0.78, 0.70, WHITE);
-  fill(0.30, 0.34, 0.34, 0.66, RED);         // collars
-  fill(0.66, 0.34, 0.70, 0.66, RED);
-  fill(0.15, 0.38, 0.22, 0.62, WHITE);       // outer plates
-  fill(0.78, 0.38, 0.85, 0.62, WHITE);
-  fill(0.22, 0.30, 0.23, 0.70, NAVY);        // thin outlines so plates read clearly
-  fill(0.77, 0.30, 0.78, 0.70, NAVY);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    let r = 0, g = 0, b = 0;
+    for (let sy = 0; sy < SUB; sy++) for (let sx = 0; sx < SUB; sx++) {
+      const c = colorAt((x + (sx + 0.5) / SUB) / size, (y + (sy + 0.5) / SUB) / size);
+      r += c[0]; g += c[1]; b += c[2];
+    }
+    const n = SUB * SUB;
+    px.set([Math.round(r / n), Math.round(g / n), Math.round(b / n)], (y * size + x) * 3);
+  }
 
   const raw = Buffer.alloc((size * 3 + 1) * size);
   for (let y = 0; y < size; y++) { raw[y * (size * 3 + 1)] = 0; px.copy(raw, y * (size * 3 + 1) + 1, y * size * 3, (y + 1) * size * 3); }

@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'; // first: gives Dexie an in-memory IndexedDB
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '../db';
-import { DEFAULT_EXERCISES, DEFAULT_TEMPLATES } from '../lib/defaults';
+import { SAMPLE_EXERCISES as DEFAULT_EXERCISES, SAMPLE_TEMPLATES as DEFAULT_TEMPLATES } from '../lib/testFixtures';
 import { markDeleted } from '../lib/draft';
 import type { Workout } from '../types';
 import { NeedsAuthError } from './graph';

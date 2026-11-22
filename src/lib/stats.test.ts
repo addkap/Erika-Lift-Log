@@ -62,7 +62,7 @@ describe('per-exercise stats', () => {
     expect(exerciseStats(pts)).toEqual({ best: 120, avgRepsPerSet: 61 / 5, sessions: 2 });
   });
   it('lists logged exercises', () => {
-    expect(loggedExercises(ws)).toEqual([{ id: 'hack-squat', name: 'Hack squat' }]);
+    expect(loggedExercises(ws)).toEqual([{ id: 'hack-squat', name: 'Hack squat', kind: 'weightReps' }]);
   });
 });
 
@@ -83,5 +83,27 @@ describe('editing history', () => {
     const gone = markDeleted(w('2026-11-08'), 5);
     expect(gone.deletedAt).toBe(5);
     expect(summarize([gone], '4w', TODAY).total).toBe(0);
+  });
+});
+
+describe('stats for reps-only and timed-hold exercises (stage 1)', () => {
+  const w = (date: string, entries: Workout['entries']): Workout => ({ id: date, date, type: 'lower', entries, createdAt: 1, updatedAt: 1 });
+  const ws = [
+    w('2026-11-01', [
+      { exerciseId: 'plank', name: 'Plank', kind: 'timedHold', sets: [{ weight: 0, reps: 0, seconds: 30 }, { weight: 0, reps: 0, seconds: 40 }] },
+      { exerciseId: 'bridge', name: 'Bridges', kind: 'repsOnly', sets: [{ weight: 0, reps: 12 }, { weight: 0, reps: 15 }] },
+    ]),
+  ];
+  it('timed holds are measured in seconds', () => {
+    expect(exerciseSessions(ws, 'plank')).toMatchObject([{ bestSeconds: 40, totalSeconds: 70, sets: 2 }]);
+  });
+  it('reps-only exercises are measured in reps', () => {
+    expect(exerciseSessions(ws, 'bridge')).toMatchObject([{ bestReps: 15, reps: 27, weight: 0 }]);
+  });
+  it('both are listed with their kind', () => {
+    expect(loggedExercises(ws)).toEqual([
+      { id: 'bridge', name: 'Bridges', kind: 'repsOnly' },
+      { id: 'plank', name: 'Plank', kind: 'timedHold' },
+    ]);
   });
 });

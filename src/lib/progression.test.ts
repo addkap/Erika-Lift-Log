@@ -94,3 +94,38 @@ describe('findLastSession / hints', () => {
     expect(describeSets([...sets(60, 15), ...sets(120, 12, 11)])).toBe('60 lb x 15; 120 lb x 12, 11');
   });
 });
+
+describe('per-exercise rules (stage 1)', () => {
+  const sets = (reps: number[], weight = 50): SetRecord[] => reps.map((r) => ({ weight, reps: r }));
+  const history = (kind: 'weightReps' | 'repsOnly' | 'timedHold', s: SetRecord[]): Workout[] => [
+    { id: 'w', date: '2026-11-08', type: 'lower', createdAt: 1, updatedAt: 1, entries: [{ exerciseId: 'x', name: 'X', kind, sets: s }] },
+  ];
+
+  it('uses the exercise rep goal', () => {
+    expect(suggestNext(sets([10, 10, 10]), 5, 10)?.weight).toBe(55); // goal 10: hit it
+    expect(suggestNext(sets([10, 10, 10]), 5)?.weight).toBe(50); // default goal 12: stay
+    expect(suggestNext(sets([15, 15]), 2.5, 15)?.weight).toBe(52.5);
+    expect(suggestNext(sets([15, 13]), 5, 15)?.weight).toBe(50); // average 14 < 14.5
+  });
+  it('auto-increase off keeps the same weight even after a perfect session', () => {
+    const h = hintFor(history('weightReps', sets([12, 12, 12])), { id: 'x', increment: 5, autoIncrease: false });
+    expect(h.weight).toBe('50');
+    expect(h.suggestionText).toMatch(/Same weight/);
+  });
+  it('auto-increase on with decimals', () => {
+    const h = hintFor(history('weightReps', sets([12, 12, 12])), { id: 'x', increment: 2.5, autoIncrease: true, repGoal: 12 });
+    expect(h.weight).toBe('52.5');
+  });
+  it('reps-only and timed-hold exercises show last time and suggest no weight', () => {
+    const reps = hintFor(history('repsOnly', sets([15, 14], 0)), { id: 'x', increment: 5, kind: 'repsOnly' });
+    expect(reps.lastText).toMatch(/15, 14 reps/);
+    expect(reps.weight).toBe('');
+    expect(reps.suggestionText).toBeNull();
+    const hold = hintFor(history('timedHold', [{ weight: 0, reps: 0, seconds: 30 }, { weight: 0, reps: 0, seconds: 25 }]), { id: 'x', increment: 5, kind: 'timedHold' });
+    expect(hold.lastText).toMatch(/30, 25 seconds/);
+    expect(hold.weight).toBe('');
+  });
+  it('a hold counts as a logged set', () => {
+    expect(findLastSession(history('timedHold', [{ weight: 0, reps: 0, seconds: 20 }]), 'x')?.sets).toHaveLength(1);
+  });
+});

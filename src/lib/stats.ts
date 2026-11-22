@@ -1,6 +1,7 @@
 // Numbers for the Summary page. All pure functions of the saved workouts.
-import type { Workout, WorkoutType } from '../types';
+import type { ExerciseKind, Workout, WorkoutType } from '../types';
 import { addDays, weekStart } from './dates';
+import { entryKind, isLogged } from './model';
 
 export type Range = '1w' | '4w' | '3m' | '1y' | 'all';
 export const RANGES: { id: Range; label: string }[] = [
@@ -78,8 +79,11 @@ export function summarize(all: Workout[], range: Range, today: string): Summary 
 
 export interface SessionPoint {
   date: string;
-  weight: number; // heaviest weight used that session
+  weight: number; // heaviest weight used that session (0 for reps-only and holds)
   avgReps: number; // average reps per set that session
+  bestReps: number; // most reps in any one set
+  bestSeconds: number; // longest hold in any one set (timed holds)
+  totalSeconds: number; // all hold time that session
   sets: number;
   reps: number; // total reps
   volume: number; // sum of weight x reps over every set
@@ -89,13 +93,17 @@ export interface SessionPoint {
 export function exerciseSessions(all: Workout[], exerciseId: string): SessionPoint[] {
   const points: SessionPoint[] = [];
   for (const w of liveWorkouts(all)) {
-    const sets = w.entries.filter((e) => e.exerciseId === exerciseId).flatMap((e) => e.sets).filter((s) => s.reps > 0);
+    const sets = w.entries.filter((e) => e.exerciseId === exerciseId).flatMap((e) => e.sets).filter(isLogged);
     if (sets.length === 0) continue;
     const reps = sets.reduce((a, s) => a + s.reps, 0);
+    const seconds = sets.map((s) => s.seconds ?? 0);
     points.push({
       date: w.date,
       weight: Math.max(...sets.map((s) => s.weight)),
       avgReps: reps / sets.length,
+      bestReps: Math.max(...sets.map((s) => s.reps)),
+      bestSeconds: Math.max(...seconds),
+      totalSeconds: seconds.reduce((a, n) => a + n, 0),
       sets: sets.length,
       reps,
       volume: sets.reduce((a, s) => a + s.weight * s.reps, 0),
@@ -113,11 +121,11 @@ export function exerciseStats(points: SessionPoint[]): ExerciseStats | null {
   return { best: Math.max(...points.map((p) => p.weight)), avgRepsPerSet: reps / sets, sessions: points.length };
 }
 
-/** Exercises that have at least one logged set, with their latest saved name. */
-export function loggedExercises(all: Workout[]): { id: string; name: string }[] {
-  const names = new Map<string, string>();
+/** Exercises that have at least one logged set, with their latest saved name and kind. */
+export function loggedExercises(all: Workout[]): { id: string; name: string; kind: ExerciseKind }[] {
+  const found = new Map<string, { name: string; kind: ExerciseKind }>();
   for (const w of [...liveWorkouts(all)].sort((a, b) => a.date.localeCompare(b.date))) {
-    for (const e of w.entries) if (e.sets.some((s) => s.reps > 0)) names.set(e.exerciseId, e.name);
+    for (const e of w.entries) if (e.sets.some(isLogged)) found.set(e.exerciseId, { name: e.name, kind: entryKind(e) });
   }
-  return [...names].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  return [...found].map(([id, v]) => ({ id, ...v })).sort((a, b) => a.name.localeCompare(b.name));
 }

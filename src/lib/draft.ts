@@ -1,8 +1,9 @@
 // Pure helpers for editing the in-progress workout. Each returns a NEW draft
 // (nothing is mutated), which makes them easy to test and safe to autosave.
 
-import type { Draft, DraftEntry, DraftRow, Exercise, Template, Workout, WorkoutType } from '../types';
+import type { Draft, DraftEntry, DraftRow, Exercise, ExerciseKind, SetRecord, Template, Workout, WorkoutType } from '../types';
 import { newId } from './ids';
+import { entryKind } from './model';
 import { hintFor } from './progression';
 
 /** Keep only characters that make sense in a number box. */
@@ -21,11 +22,11 @@ export function parseNumber(text: string): number {
 }
 
 export function makeRows(count: number, weight: string): DraftRow[] {
-  return Array.from({ length: count }, () => ({ weight, reps: '' }));
+  return Array.from({ length: count }, () => ({ weight, reps: '', seconds: '' }));
 }
 
 export function newEntry(
-  ex: Pick<Exercise, 'id' | 'name'>,
+  ex: Pick<Exercise, 'id' | 'name'> & Partial<Pick<Exercise, 'kind' | 'notes'>>,
   minSets: number,
   maxSets: number,
   weight: string,
@@ -35,6 +36,8 @@ export function newEntry(
     key: newId(),
     exerciseId: ex.id,
     name: ex.name,
+    kind: ex.kind ?? 'weightReps',
+    notes: ex.notes ?? '',
     minSets,
     maxSets,
     startWeight,
@@ -55,17 +58,17 @@ export function buildDraft(
   const entries: DraftEntry[] = [];
   for (const item of template.items) {
     const ex = byId.get(item.exerciseId);
-    if (!ex || ex.deletedAt) continue;
+    if (!ex || ex.deletedAt || ex.archived) continue; // archived exercises stay in history but not in new workouts
     entries.push(newEntry(ex, item.minSets, item.maxSets, hintFor(workouts, ex).weight));
   }
-  return { id: 'current', type, date, entries, updatedAt: now };
+  return { id: 'current', type, typeName: template.name, date, entries, updatedAt: now };
 }
 
 function mapEntry(d: Draft, key: string, fn: (e: DraftEntry) => DraftEntry): Draft {
   return { ...d, entries: d.entries.map((e) => (e.key === key ? fn(e) : e)) };
 }
 
-export function setCell(d: Draft, key: string, rowIndex: number, field: 'weight' | 'reps', value: string): Draft {
+export function setCell(d: Draft, key: string, rowIndex: number, field: 'weight' | 'reps' | 'seconds', value: string): Draft {
   return mapEntry(d, key, (e) => ({
     ...e,
     rows: e.rows.map((r, i) => (i === rowIndex ? { ...r, [field]: value } : r)),
@@ -76,7 +79,7 @@ export function setCell(d: Draft, key: string, rowIndex: number, field: 'weight'
 export function addRow(d: Draft, key: string): Draft {
   return mapEntry(d, key, (e) => {
     const prev = e.rows[e.rows.length - 1];
-    return { ...e, rows: [...e.rows, { weight: prev ? prev.weight : '', reps: '' }] };
+    return { ...e, rows: [...e.rows, { weight: prev ? prev.weight : '', reps: '', seconds: '' }] };
   });
 }
 
@@ -105,7 +108,18 @@ export function addEntry(d: Draft, entry: DraftEntry): Draft {
 
 /** Does this entry have any reps typed in? (Used to decide whether to confirm a removal.) */
 export function entryHasData(e: DraftEntry): boolean {
-  return e.rows.some((r) => parseNumber(r.reps) > 0);
+  return e.rows.some(rowLogged(e.kind));
+}
+
+/** Which rows count: a timed hold needs seconds, everything else needs reps. */
+const rowLogged = (kind: ExerciseKind) => (r: DraftRow) =>
+  parseNumber(kind === 'timedHold' ? r.seconds : r.reps) > 0;
+
+/** Turn one typed row into the number(s) we save. Weight is only kept for weight + reps. */
+function rowToSet(kind: ExerciseKind, r: DraftRow): SetRecord {
+  if (kind === 'timedHold') return { weight: 0, reps: 0, seconds: parseNumber(r.seconds) };
+  if (kind === 'repsOnly') return { weight: 0, reps: parseNumber(r.reps) };
+  return { weight: parseNumber(r.weight), reps: parseNumber(r.reps) };
 }
 
 /**
@@ -117,13 +131,12 @@ export function draftToWorkout(d: Draft, now = Date.now()): Workout | null {
     .map((e) => ({
       exerciseId: e.exerciseId,
       name: e.name,
-      sets: e.rows
-        .filter((r) => parseNumber(r.reps) > 0)
-        .map((r) => ({ weight: parseNumber(r.weight), reps: parseNumber(r.reps) })),
+      kind: e.kind,
+      sets: e.rows.filter(rowLogged(e.kind)).map((r) => rowToSet(e.kind, r)),
     }))
     .filter((e) => e.sets.length > 0);
   if (entries.length === 0) return null;
-  return { id: newId(), date: d.date, type: d.type, entries, createdAt: now, updatedAt: now };
+  return { id: newId(), date: d.date, type: d.type, ...(d.typeName ? { typeName: d.typeName } : {}), entries, createdAt: now, updatedAt: now };
 }
 
 // ---- Editing an already-saved workout (History page) ----
@@ -134,15 +147,22 @@ export function workoutToDraft(w: Workout): Draft {
   return {
     id: 'current',
     type: w.type,
+    typeName: w.typeName,
     date: w.date,
     updatedAt: w.updatedAt,
     entries: w.entries.map((e) => ({
       key: newId(),
       exerciseId: e.exerciseId,
       name: e.name,
+      kind: entryKind(e),
+      notes: '',
       minSets: e.sets.length,
       maxSets: e.sets.length,
-      rows: e.sets.map((s) => ({ weight: String(s.weight), reps: String(s.reps) })),
+      rows: e.sets.map((s) => ({
+        weight: String(s.weight),
+        reps: String(s.reps),
+        seconds: s.seconds ? String(s.seconds) : '',
+      })),
     })),
   };
 }

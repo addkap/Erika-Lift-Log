@@ -5,7 +5,8 @@ import { addCustomExercise, discardDraft, finishWorkout, loadDraft, saveDraft, s
 import { addEntry, addRow, entryHasData, moveEntry, removeEntry, removeLastRow, sanitizeNumber, setCell } from '../lib/draft';
 import { formatLongDate, todayLocal } from '../lib/dates';
 import { hintFor } from '../lib/progression';
-import { WORKOUT_LABELS, type Draft, type Workout, type WorkoutType } from '../types';
+import { templateName } from '../lib/model';
+import { DEFAULT_WORKOUT_NAMES, type Draft, type Exercise, type Workout, type WorkoutType } from '../types';
 import ExerciseCard from '../components/ExerciseCard';
 import { isConfigured } from '../sync/auth';
 import { useSyncStatus } from '../sync/useSyncStatus';
@@ -51,7 +52,7 @@ export default function WorkoutPage({ onGoSettings }: { onGoSettings: () => void
   return (
     <ActiveWorkout
       draft={draft}
-      incrementOf={(id) => exercises.find((e) => e.id === id)?.increment ?? 5}
+      exerciseOf={(id) => exercises.find((e) => e.id === id)}
       workouts={workouts}
       update={update}
       onFinished={() => { replace(null); setSaved(true); }}
@@ -67,12 +68,18 @@ export default function WorkoutPage({ onGoSettings }: { onGoSettings: () => void
   );
 }
 
+/** The exercise's current settings, falling back to what the card was started with if it is gone. */
+function exerciseSettings(ex: Exercise | undefined, entry: { kind: Exercise['kind'] }) {
+  return { increment: ex?.increment ?? 5, kind: ex?.kind ?? entry.kind, autoIncrease: ex?.autoIncrease, repGoal: ex?.repGoal };
+}
+
 // ---------------------------------------------------------------- start screen
 
 function StartScreen({ saved, onStart, onGoSettings }: { saved: boolean; onStart: (t: WorkoutType, date: string) => void; onGoSettings: () => void }) {
   const sync = useSyncStatus();
   const [type, setType] = useState<WorkoutType | null>(null);
   const [date, setDate] = useState(todayLocal());
+  const templates = useLiveQuery(() => db.templates.toArray(), [], []);
 
   return (
     <>
@@ -84,13 +91,13 @@ function StartScreen({ saved, onStart, onGoSettings }: { saved: boolean; onStart
           <button className="btn" onClick={onGoSettings}>Set up OneDrive</button>
         </section>
       )}
-      {saved && <p className="banner ok" role="status">Workout saved. Great job, Go Bills!</p>}
+      {saved && <p className="banner ok" role="status">Workout saved. Great job!</p>}
 
       <p className="label">Which workout?</p>
       <div className="choices">
         {(['lower', 'upper', 'full'] as WorkoutType[]).map((t) => (
           <button key={t} className={type === t ? 'choice selected' : 'choice'} aria-pressed={type === t} onClick={() => setType(t)}>
-            {WORKOUT_LABELS[t]}
+            {templateName(templates, t)}
           </button>
         ))}
       </div>
@@ -101,7 +108,7 @@ function StartScreen({ saved, onStart, onGoSettings }: { saved: boolean; onStart
       <button className="btn primary big" disabled={!type} onClick={() => type && onStart(type, date)}>
         Start
       </button>
-      {!type && <p className="muted">Tap Lower Body, Upper Body or Full Body first.</p>}
+      {!type && <p className="muted">Tap one of the workouts above first.</p>}
     </>
   );
 }
@@ -111,13 +118,13 @@ function StartScreen({ saved, onStart, onGoSettings }: { saved: boolean; onStart
 function ActiveWorkout(props: {
   draft: Draft;
   workouts: Workout[];
-  incrementOf: (exerciseId: string) => number;
+  exerciseOf: (exerciseId: string) => Exercise | undefined;
   update: (fn: (d: Draft) => Draft) => void;
   onFinished: () => void;
   onCancel: () => void;
   onCustom: (opts: { name: string; startWeight: string; keep: boolean }) => void;
 }) {
-  const { draft, workouts, incrementOf, update, onFinished, onCancel, onCustom } = props;
+  const { draft, workouts, exerciseOf, update, onFinished, onCancel, onCustom } = props;
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
 
@@ -129,7 +136,7 @@ function ActiveWorkout(props: {
 
   return (
     <>
-      <h1>{WORKOUT_LABELS[draft.type]}</h1>
+      <h1>{draft.typeName || DEFAULT_WORKOUT_NAMES[draft.type]}</h1>
       <label className="label" htmlFor="wdate">Date: {formatLongDate(draft.date)}</label>
       <input id="wdate" className="date" type="date" value={draft.date} onChange={(e) => e.target.value && update((d) => ({ ...d, date: e.target.value }))} />
 
@@ -137,7 +144,7 @@ function ActiveWorkout(props: {
         <ExerciseCard
           key={entry.key}
           entry={entry}
-          hint={hintFor(workouts, { id: entry.exerciseId, increment: incrementOf(entry.exerciseId) }, entry.startWeight)}
+          hint={hintFor(workouts, { id: entry.exerciseId, ...exerciseSettings(exerciseOf(entry.exerciseId), entry) }, entry.startWeight)}
           isFirst={i === 0}
           isLast={i === draft.entries.length - 1}
           onCell={(row, field, value) => update((d) => setCell(d, entry.key, row, field, value))}

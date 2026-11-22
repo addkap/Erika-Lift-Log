@@ -5,15 +5,17 @@ import { db } from '../db';
 import { formatShortDate, formatWeekday, todayLocal } from '../lib/dates';
 import { formatWeight } from '../lib/progression';
 import { RANGES, exerciseSessions, exerciseStats, loggedExercises, rangeStart, summarize, type Range } from '../lib/stats';
-import { WORKOUT_LABELS, type WorkoutType } from '../types';
+import { templateName } from '../lib/model';
+import type { WorkoutType } from '../types';
 
-// Bills colours for the charts.
-const BLUE = '#00338d';
-const RED = '#c60c30';
+// Bloom colours for the charts (both clear 3:1 against white).
+const BLUE = '#41337a'; // indigo velvet
+const RED = '#4f86a3'; // deeper steel blue
 const TICK = { fontSize: 15, fill: '#0a1020' };
 
 export default function SummaryPage() {
   const workouts = useLiveQuery(() => db.workouts.toArray(), [], []);
+  const templates = useLiveQuery(() => db.templates.toArray(), [], []);
   const [range, setRange] = useState<Range>('3m');
   const [pick, setPick] = useState<string>('');
   const today = todayLocal();
@@ -69,7 +71,7 @@ export default function SummaryPage() {
       <section className="card">
         <h2>By workout type</h2>
         {(['lower', 'upper', 'full'] as WorkoutType[]).map((t) => (
-          <div className="type-line" key={t}><span>{WORKOUT_LABELS[t]}</span><span>{summary.byType[t]}</span></div>
+          <div className="type-line" key={t}><span>{templateName(templates, t)}</span><span>{summary.byType[t]}</span></div>
         ))}
       </section>
 

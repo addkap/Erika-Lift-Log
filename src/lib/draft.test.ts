@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_EXERCISES, DEFAULT_TEMPLATES } from './defaults';
+import { SAMPLE_EXERCISES as DEFAULT_EXERCISES, SAMPLE_TEMPLATES as DEFAULT_TEMPLATES } from './testFixtures';
 import {
   addRow, buildDraft, draftToWorkout, moveEntry, removeEntry, removeLastRow, sanitizeNumber, setCell,
 } from './draft';
@@ -76,5 +76,24 @@ describe('number boxes', () => {
     expect(sanitizeNumber('12,5', true)).toBe('12.5');
     expect(sanitizeNumber('1.2.3', true)).toBe('1.23');
     expect(sanitizeNumber('1a2.5', false)).toBe('125');
+  });
+});
+
+describe('saving all three kinds (stage 1)', () => {
+  it('saves seconds for holds, reps for reps-only, weight and reps otherwise', () => {
+    let d = fresh();
+    d = { ...d, entries: [
+      { ...d.entries[0], kind: 'timedHold' as const, rows: [{ weight: '', reps: '', seconds: '45' }, { weight: '', reps: '', seconds: '' }] },
+      { ...d.entries[1], kind: 'repsOnly' as const, rows: [{ weight: '99', reps: '10', seconds: '' }] },
+      { ...d.entries[2], rows: [{ weight: '40', reps: '12', seconds: '' }] },
+    ] };
+    const w = draftToWorkout(d)!;
+    expect(w.entries.map((e) => e.sets)).toEqual([
+      [{ weight: 0, reps: 0, seconds: 45 }],
+      [{ weight: 0, reps: 10 }], // a stray weight is not kept for reps-only
+      [{ weight: 40, reps: 12 }],
+    ]);
+    expect(w.entries.map((e) => e.kind)).toEqual(['timedHold', 'repsOnly', 'weightReps']);
+    expect(w.typeName).toBe('Lower Body');
   });
 });

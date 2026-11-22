@@ -3,8 +3,9 @@ import { db } from './db';
 import { DEFAULT_EXERCISES, DEFAULT_TEMPLATES } from './lib/defaults';
 import { addEntry, buildDraft, draftToWorkout, newEntry } from './lib/draft';
 import { newId } from './lib/ids';
+import { normalizeExercise } from './lib/model';
 import { hintFor } from './lib/progression';
-import type { Draft, Workout, WorkoutType } from './types';
+import type { Draft, ExerciseKind, Workout, WorkoutType } from './types';
 
 /** First run: load the preloaded exercises and workouts. Safe to call every startup. */
 export async function ensureSeeded(): Promise<void> {
@@ -46,14 +47,14 @@ export async function finishWorkout(draft: Draft): Promise<Workout | null> {
  */
 export async function addCustomExercise(
   draft: Draft,
-  opts: { name: string; startWeight: string; keep: boolean },
+  opts: { name: string; startWeight: string; keep: boolean; kind?: ExerciseKind },
 ): Promise<Draft> {
   const name = opts.name.trim();
   const now = Date.now();
   const all = await db.exercises.toArray();
-  let ex = all.find((e) => !e.deletedAt && e.name.toLowerCase() === name.toLowerCase());
+  let ex = all.find((e) => !e.deletedAt && !e.archived && e.name.toLowerCase() === name.toLowerCase());
   if (!ex) {
-    ex = { id: newId(), name, increment: 5, updatedAt: now };
+    ex = normalizeExercise({ id: newId(), name, kind: opts.kind ?? 'weightReps', updatedAt: now });
     await db.exercises.add(ex);
   }
 

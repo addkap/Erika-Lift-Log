@@ -6,7 +6,8 @@ import { addRow, applyDraftToWorkout, markDeleted, removeLastRow, setCell, worko
 import { formatLongDate } from '../lib/dates';
 import { describeSets } from '../lib/progression';
 import { liveWorkouts } from '../lib/stats';
-import { WORKOUT_LABELS, type Draft, type Workout } from '../types';
+import { entryKind, workoutName } from '../lib/model';
+import type { Draft, Workout } from '../types';
 
 /** List of past workouts, newest first. Tap one to fix it, change its date, or delete it. */
 export default function HistoryPage() {
@@ -23,7 +24,7 @@ export default function HistoryPage() {
       {list.length === 0 && <p>No workouts saved yet. Log one on the Workout tab.</p>}
       {list.map((w) => (
         <button key={w.id} className="list-item" onClick={() => setOpenId(w.id)}>
-          <strong>{formatLongDate(w.date)} · {WORKOUT_LABELS[w.type]}</strong>
+          <strong>{formatLongDate(w.date)} · {workoutName(w)}</strong>
           <span>{w.entries.length} {w.entries.length === 1 ? 'exercise' : 'exercises'}, {w.entries.reduce((n, e) => n + e.sets.length, 0)} sets</span>
         </button>
       ))}
@@ -54,7 +55,7 @@ function EditWorkout({ workout, onClose }: { workout: Workout; onClose: () => vo
 
   return (
     <>
-      <h1>{WORKOUT_LABELS[workout.type]}</h1>
+      <h1>{workoutName(workout)}</h1>
       <label className="label" htmlFor="hdate">Date: {formatLongDate(draft.date)}</label>
       <input id="hdate" className="date" type="date" value={draft.date} onChange={(e) => e.target.value && change((d) => ({ ...d, date: e.target.value }))} />
 
@@ -83,7 +84,7 @@ function EditWorkout({ workout, onClose }: { workout: Workout; onClose: () => vo
       <button className="btn primary big" onClick={save}>Save changes</button>
       <button className="btn" onClick={() => (!dirty || window.confirm('Leave without saving your changes?')) && onClose()}>Back</button>
       <button className="btn danger" onClick={remove}>Delete workout</button>
-      <p className="muted">Original: {workout.entries.map((e) => `${e.name} ${describeSets(e.sets)}`).join(' · ')}</p>
+      <p className="muted">Original: {workout.entries.map((e) => `${e.name} ${describeSets(e.sets, entryKind(e))}`).join(' · ')}</p>
     </>
   );
 }

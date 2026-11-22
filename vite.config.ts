@@ -18,13 +18,13 @@ export default defineConfig({
       manifest: {
         name: 'Lift Log',
         short_name: 'Lift Log',
-        description: 'Simple gym workout log',
+        description: 'Simple workout and exercise log',
         display: 'standalone', // opens full-screen, no browser bars
         orientation: 'portrait',
         start_url: base,
         scope: base,
-        background_color: '#ffffff',
-        theme_color: '#00338d',
+        background_color: '#ecfee8',
+        theme_color: '#41337a',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
