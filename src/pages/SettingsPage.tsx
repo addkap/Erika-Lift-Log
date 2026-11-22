@@ -22,11 +22,7 @@ export default function SettingsPage({ startInEditor = false }: { startInEditor?
     <>
       <h1>Settings</h1>
 
-      <section className="card">
-        <h2>My workouts</h2>
-        <p>Change the exercises in each workout, add new ones, reorder them, and rename the workouts. Great for when your physical therapy changes.</p>
-        <button className="btn primary" onClick={() => setEditing(true)}>Edit my workouts</button>
-      </section>
+      <button className="btn primary" onClick={() => setEditing(true)}>Edit my workouts</button>
 
       <section className="card">
         <h2>Phone storage</h2>

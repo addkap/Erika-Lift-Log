@@ -1,9 +1,9 @@
-// Draws the app icon (a pale-aqua kettlebell on an indigo-to-steel-blue gradient) as PNG files.
+// Draws the app icon (a pale-aqua kettlebell on a deep-blue-to-steel-blue gradient) as PNG files.
 // No image libraries needed: it writes the pixels itself. Run with: node scripts/make-icons.mjs
 import { deflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
-const INDIGO = [65, 51, 122], STEEL = [110, 164, 191], FROZEN = [194, 239, 235];
+const DEEP = [3, 64, 120], STEEL = [110, 164, 191], FROZEN = [194, 239, 235];
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 
 // CRC32 (PNG chunks need it)
@@ -17,7 +17,7 @@ function chunk(type, data) {
 }
 
 function icon(size) {
-  // Bloom kettlebell: a frozen-water bell with a steel-blue centre on an indigo-to-steel-blue gradient.
+  // Kettlebell: a frozen-water bell with a steel-blue centre on a deep-blue-to-steel-blue gradient.
   // Circles with 4x4 sub-samples per pixel for smooth edges. Everything stays inside the middle 70%
   // so round/masked icons never crop it.
   const px = Buffer.alloc(size * size * 3);
@@ -28,7 +28,7 @@ function icon(size) {
     if (d(0.5, 0.63) < 0.25) return FROZEN; // bell
     const h = d(0.5, 0.40);
     if (h < 0.24 && h > 0.15 && y < 0.46) return FROZEN; // handle (upper half of a ring)
-    return mix(INDIGO, STEEL, Math.min(1, Math.max(0, (x + y) / 2 - 0.15) * 1.4)); // indigo fading to steel blue
+    return mix(DEEP, STEEL, Math.min(1, Math.max(0, (x + y) / 2 - 0.15) * 1.4)); // deep blue fading to steel blue
   };
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     let r = 0, g = 0, b = 0;

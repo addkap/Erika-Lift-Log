@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Workout, WorkoutType } from '../types';
 import { applyDraftToWorkout, markDeleted, setCell, workoutToDraft } from './draft';
-import { exerciseSessions, exerciseStats, loggedExercises, summarize } from './stats';
+import { exerciseSessions, exerciseStats, exerciseView, loggedExercises, summarize } from './stats';
 
 let n = 0;
 const w = (date: string, type: WorkoutType = 'lower', sets = [{ weight: 100, reps: 10 }], extra: Partial<Workout> = {}): Workout => ({
@@ -105,5 +105,73 @@ describe('stats for reps-only and timed-hold exercises (stage 1)', () => {
       { id: 'bridge', name: 'Bridges', kind: 'repsOnly' },
       { id: 'plank', name: 'Plank', kind: 'timedHold' },
     ]);
+  });
+});
+
+describe('what each kind charts (stage 3)', () => {
+  const w = (date: string, entries: Workout['entries']): Workout => ({ id: date, date, type: 'lower', entries, createdAt: 1, updatedAt: 1 });
+  const hold = (secs: number[]) => ({ exerciseId: 'plank', name: 'Plank', kind: 'timedHold' as const, sets: secs.map((seconds) => ({ weight: 0, reps: 0, seconds })) });
+  const reps = (n: number[]) => ({ exerciseId: 'bridge', name: 'Bridges', kind: 'repsOnly' as const, sets: n.map((r) => ({ weight: 0, reps: r })) });
+  const lift = (n: number[], weight: number) => ({ exerciseId: 'press', name: 'Press', kind: 'weightReps' as const, sets: n.map((r) => ({ weight, reps: r })) });
+  const ws = [
+    w('2026-11-01', [hold([30, 40]), reps([10, 12]), lift([12, 10], 50)]),
+    w('2026-11-08', [hold([45, 50]), reps([14, 12]), lift([12, 12], 55)]),
+  ];
+
+  it('timed holds chart seconds', () => {
+    const v = exerciseView('timedHold', exerciseSessions(ws, 'plank'))!;
+    expect(v.line.key).toBe('bestSeconds');
+    expect(v.bars.key).toBe('totalSeconds');
+    expect(v.tiles[0]).toEqual({ value: '50', label: 'Longest hold (seconds)' });
+    expect(v.tiles[1].value).toBe('41.3'); // 165 seconds over 4 sets
+    expect(exerciseSessions(ws, 'plank').map((p) => p.bestSeconds)).toEqual([40, 50]);
+  });
+  it('reps-only exercises chart reps, not weight', () => {
+    const v = exerciseView('repsOnly', exerciseSessions(ws, 'bridge'))!;
+    expect(v.line.key).toBe('bestReps');
+    expect(v.bars.key).toBe('reps');
+    expect(v.tiles[0].value).toBe('14');
+    expect(v.tiles[1].value).toBe('12.0');
+  });
+  it('weight + reps still charts weight and volume', () => {
+    const v = exerciseView('weightReps', exerciseSessions(ws, 'press'))!;
+    expect(v.line.key).toBe('weight');
+    expect(v.bars.key).toBe('volume');
+    expect(v.tiles[0]).toEqual({ value: '55', label: 'Best weight (lb)' });
+  });
+  it('nothing to chart gives no view', () => {
+    expect(exerciseView('timedHold', [])).toBeNull();
+  });
+});
+
+describe('editing a saved hold or bodyweight workout (stage 3)', () => {
+  const saved: Workout = {
+    id: 'w1', date: '2026-11-01', type: 'lower', typeName: 'Legs', createdAt: 1, updatedAt: 1,
+    entries: [
+      { exerciseId: 'plank', name: 'Plank', kind: 'timedHold', sets: [{ weight: 0, reps: 0, seconds: 30 }] },
+      { exerciseId: 'bridge', name: 'Bridges', kind: 'repsOnly', sets: [{ weight: 0, reps: 10 }] },
+    ],
+  };
+  it('opens with the right boxes filled, and saving unchanged changes no numbers', () => {
+    const d = workoutToDraft(saved);
+    expect(d.entries[0].rows[0]).toEqual({ weight: '0', reps: '0', seconds: '30' });
+    expect(applyDraftToWorkout(saved, d, 5)!.entries).toEqual(saved.entries);
+  });
+  it('lets seconds and reps be corrected, keeping the kind and the saved name', () => {
+    let d = workoutToDraft(saved);
+    d = setCell(d, d.entries[0].key, 0, 'seconds', '45');
+    d = setCell(d, d.entries[1].key, 0, 'reps', '15');
+    const w = applyDraftToWorkout(saved, d, 9)!;
+    expect(w.entries[0]).toMatchObject({ kind: 'timedHold', sets: [{ seconds: 45 }] });
+    expect(w.entries[1]).toMatchObject({ kind: 'repsOnly', sets: [{ weight: 0, reps: 15 }] });
+    expect(w.typeName).toBe('Legs');
+    expect(exerciseSessions([w], 'plank')[0].bestSeconds).toBe(45);
+  });
+  it('clearing the seconds removes that set; clearing everything returns null', () => {
+    let d = workoutToDraft(saved);
+    d = setCell(d, d.entries[0].key, 0, 'seconds', '');
+    expect(applyDraftToWorkout(saved, d)!.entries).toHaveLength(1);
+    d = setCell(d, d.entries[1].key, 0, 'reps', '');
+    expect(applyDraftToWorkout(saved, d)).toBeNull();
   });
 });

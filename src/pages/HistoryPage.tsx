@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
-import NumberField from '../components/NumberField';
+import SetRows from '../components/SetRows';
 import { addRow, applyDraftToWorkout, markDeleted, removeLastRow, setCell, workoutToDraft } from '../lib/draft';
 import { formatLongDate } from '../lib/dates';
 import { describeSets } from '../lib/progression';
@@ -41,7 +41,7 @@ function EditWorkout({ workout, onClose }: { workout: Workout; onClose: () => vo
 
   async function save() {
     const updated = applyDraftToWorkout(workout, draft);
-    if (!updated) { setError('No reps are left in this workout. To remove it completely, tap Delete workout.'); return; }
+    if (!updated) { setError('Nothing is entered in this workout. To remove it completely, tap Delete workout.'); return; }
     await db.workouts.put(updated);
     onClose();
   }
@@ -62,23 +62,14 @@ function EditWorkout({ workout, onClose }: { workout: Workout; onClose: () => vo
       {draft.entries.map((entry) => (
         <section className="card" key={entry.key}>
           <h2>{entry.name}</h2>
-          <div className="rows">
-            <div className="row head"><span /><span>Weight (lb)</span><span>Reps</span></div>
-            {entry.rows.map((r, i) => (
-              <div className="row" key={i}>
-                <span className="setno">Set {i + 1}</span>
-                <NumberField decimal label={`${entry.name} set ${i + 1} weight in pounds`} value={r.weight} onChange={(v) => change((d) => setCell(d, entry.key, i, 'weight', v))} />
-                <NumberField label={`${entry.name} set ${i + 1} reps`} value={r.reps} onChange={(v) => change((d) => setCell(d, entry.key, i, 'reps', v))} />
-              </div>
-            ))}
-          </div>
+          <SetRows entry={entry} onCell={(row, field, value) => change((d) => setCell(d, entry.key, row, field, value))} />
           <div className="btns">
             <button className="btn" onClick={() => change((d) => addRow(d, entry.key))}>Add set</button>
             <button className="btn" disabled={entry.rows.length <= 1} onClick={() => change((d) => removeLastRow(d, entry.key))}>Remove last set</button>
           </div>
         </section>
       ))}
-      <p className="muted">Sets with no reps are removed when you save.</p>
+      <p className="muted">Sets with nothing entered (no reps, or no seconds for a hold) are removed when you save.</p>
 
       {error && <p className="banner err" role="alert">{error}</p>}
       <button className="btn primary big" onClick={save}>Save changes</button>

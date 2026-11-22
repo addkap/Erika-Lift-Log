@@ -3,15 +3,14 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { db } from '../db';
 import { formatShortDate, formatWeekday, todayLocal } from '../lib/dates';
-import { formatWeight } from '../lib/progression';
-import { RANGES, exerciseSessions, exerciseStats, loggedExercises, rangeStart, summarize, type Range } from '../lib/stats';
+import { RANGES, exerciseSessions, exerciseView, loggedExercises, rangeStart, summarize, type Range } from '../lib/stats';
 import { templateName } from '../lib/model';
 import type { WorkoutType } from '../types';
 
-// Bloom colours for the charts (both clear 3:1 against white).
-const BLUE = '#41337a'; // indigo velvet
+// Palette colours for the charts (both clear 3:1 against white).
+const BLUE = '#034078'; // deep blue
 const RED = '#4f86a3'; // deeper steel blue
-const TICK = { fontSize: 15, fill: '#0a1020' };
+const TICK = { fontSize: 15, fill: '#082540' };
 
 export default function SummaryPage() {
   const workouts = useLiveQuery(() => db.workouts.toArray(), [], []);
@@ -31,8 +30,9 @@ export default function SummaryPage() {
   const exerciseId = exercises.some((e) => e.id === pick) ? pick : exercises[0]?.id;
   const start = rangeStart(range, today, workouts);
   const points = exerciseId ? exerciseSessions(workouts, exerciseId).filter((p) => p.date >= start) : [];
-  const stats = exerciseStats(points);
-  const pointData = points.map((p) => ({ label: formatShortDate(p.date), weight: p.weight, volume: p.volume }));
+  const kind = exercises.find((e) => e.id === exerciseId)?.kind ?? 'weightReps';
+  const view = exerciseView(kind, points);
+  const pointData = points.map((p) => ({ label: formatShortDate(p.date), ...p }));
 
   return (
     <>
@@ -86,38 +86,39 @@ export default function SummaryPage() {
               {exercises.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
 
-            {!stats ? (
+            {!view ? (
               <p>No sets for this exercise in this time range.</p>
             ) : (
               <>
                 <div className="tiles">
-                  <div className="tile"><span className="big-number">{formatWeight(stats.best)}</span>Best weight (lb)</div>
-                  <div className="tile"><span className="big-number">{stats.avgRepsPerSet.toFixed(1)}</span>Average reps per set</div>
+                  {view.tiles.map((t) => (
+                    <div className="tile" key={t.label}><span className="big-number">{t.value}</span>{t.label}</div>
+                  ))}
                 </div>
 
-                <h2>Weight over time</h2>
-                <div className="chart" role="img" aria-label="Line chart of weight over time">
+                <h2>{view.line.title}</h2>
+                <div className="chart" role="img" aria-label={`Line chart: ${view.line.title}`}>
                   <ResponsiveContainer>
                     <LineChart data={pointData} margin={{ top: 8, right: 12, left: -4, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="label" tick={TICK} interval="preserveStartEnd" minTickGap={24} />
-                      <YAxis tick={TICK} width={48} domain={['dataMin - 5', 'dataMax + 5']} allowDecimals={false} />
+                      <YAxis tick={TICK} width={48} domain={[(min: number) => Math.max(0, Math.floor((min - view.line.pad) / view.line.pad) * view.line.pad), (max: number) => Math.ceil((max + view.line.pad) / view.line.pad) * view.line.pad]} allowDecimals={false} />
                       <Tooltip />
-                      <Line type="monotone" dataKey="weight" name="Weight (lb)" stroke={RED} strokeWidth={3} dot={{ r: 5 }} />
+                      <Line type="monotone" dataKey={view.line.key} name={view.line.name} stroke={RED} strokeWidth={3} dot={{ r: 5 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
 
-                <h2>Total volume per workout</h2>
-                <p className="muted">Sets × reps × weight, in pounds.</p>
-                <div className="chart" role="img" aria-label="Bar chart of total volume per workout">
+                <h2>{view.bars.title}</h2>
+                {view.bars.note && <p className="muted">{view.bars.note}</p>}
+                <div className="chart" role="img" aria-label={`Bar chart: ${view.bars.title}`}>
                   <ResponsiveContainer>
                     <BarChart data={pointData} margin={{ top: 8, right: 8, left: -4, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="label" tick={TICK} interval="preserveStartEnd" minTickGap={24} />
                       <YAxis tick={TICK} width={56} />
                       <Tooltip />
-                      <Bar dataKey="volume" name="Volume (lb)" fill={BLUE} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey={view.bars.key} name={view.bars.name} fill={BLUE} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

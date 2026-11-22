@@ -2,6 +2,7 @@
 import type { ExerciseKind, Workout, WorkoutType } from '../types';
 import { addDays, weekStart } from './dates';
 import { entryKind, isLogged } from './model';
+import { formatWeight } from './progression';
 
 export type Range = '1w' | '4w' | '3m' | '1y' | 'all';
 export const RANGES: { id: Range; label: string }[] = [
@@ -128,4 +129,50 @@ export function loggedExercises(all: Workout[]): { id: string; name: string; kin
     for (const e of w.entries) if (e.sets.some(isLogged)) found.set(e.exerciseId, { name: e.name, kind: entryKind(e) });
   }
   return [...found].map(([id, v]) => ({ id, ...v })).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// ---------------------------------------------------------------- what to chart for each kind
+
+export type PointKey = 'weight' | 'volume' | 'bestReps' | 'reps' | 'bestSeconds' | 'totalSeconds';
+
+export interface ExerciseView {
+  tiles: { value: string; label: string }[];
+  line: { title: string; key: PointKey; name: string; pad: number }; // pad = space above/below on the chart
+  bars: { title: string; note?: string; key: PointKey; name: string };
+}
+
+/** Each kind is measured in its own way: weight, reps, or seconds. Returns null if there is nothing to show. */
+export function exerciseView(kind: ExerciseKind, points: SessionPoint[]): ExerciseView | null {
+  if (points.length === 0) return null;
+  const sets = points.reduce((a, p) => a + p.sets, 0);
+  const reps = points.reduce((a, p) => a + p.reps, 0);
+  const seconds = points.reduce((a, p) => a + p.totalSeconds, 0);
+  if (kind === 'timedHold') {
+    return {
+      tiles: [
+        { value: String(Math.max(...points.map((p) => p.bestSeconds))), label: 'Longest hold (seconds)' },
+        { value: (seconds / sets).toFixed(1), label: 'Average hold per set (seconds)' },
+      ],
+      line: { title: 'Longest hold over time', key: 'bestSeconds', name: 'Longest hold (seconds)', pad: 5 },
+      bars: { title: 'Total hold time per workout', note: 'All sets added together, in seconds.', key: 'totalSeconds', name: 'Seconds held' },
+    };
+  }
+  if (kind === 'repsOnly') {
+    return {
+      tiles: [
+        { value: String(Math.max(...points.map((p) => p.bestReps))), label: 'Most reps in one set' },
+        { value: (reps / sets).toFixed(1), label: 'Average reps per set' },
+      ],
+      line: { title: 'Best set over time', key: 'bestReps', name: 'Most reps in one set', pad: 2 },
+      bars: { title: 'Total reps per workout', note: 'All sets added together.', key: 'reps', name: 'Reps' },
+    };
+  }
+  return {
+    tiles: [
+      { value: formatWeight(Math.max(...points.map((p) => p.weight))), label: 'Best weight (lb)' },
+      { value: (reps / sets).toFixed(1), label: 'Average reps per set' },
+    ],
+    line: { title: 'Weight over time', key: 'weight', name: 'Weight (lb)', pad: 5 },
+    bars: { title: 'Total volume per workout', note: 'Sets × reps × weight, in pounds.', key: 'volume', name: 'Volume (lb)' },
+  };
 }

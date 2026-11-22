@@ -1,16 +1,16 @@
 /* High contrast, big text, big tap targets. Nothing here is smaller than 18px or 48px. */
 :root {
-  /* Bloom palette: honeydew #ECFEE8, frozen water #C2EFEB, steel blue #6EA4BF, indigo velvet #41337A, midnight violet #331E36.
+  /* Palette: deep blue #034078, steel blue #6EA4BF, frozen water #C2EFEB (plus lighter/darker shades of them).
      Steel blue is used for accents and big buttons with DARK text (white on it is too faint). Text contrast stays above 4.5:1. */
-  --bg: #ecfee8;
-  --text: #2a1a2e;
-  --muted: #5b4b61;
-  --primary: #41337a;   /* indigo */
+  --bg: #e6f8f6;
+  --text: #082540;
+  --muted: #4a6178;
+  --primary: #034078;   /* deep blue */
   --primary-text: #ffffff;
   --accent: #6ea4bf;    /* steel blue */
-  --forest: #331e36;
-  --border: #41337a;
-  --card: #f1fbf0;
+  --forest: #06284a;
+  --border: #034078;
+  --card: #eaf8f7;
   --ok: #1f5a35;
   --err: #a00000;
   --tabbar-h: 68px;
@@ -48,9 +48,9 @@ p { margin: 4px 0; }
   cursor: pointer;
 }
 .btn.primary { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
-.btn.big { min-height: 64px; font-size: 22px; margin-top: 20px; background: linear-gradient(135deg, #6ea4bf, #c2efeb); border-color: #4f86a3; color: #2a1a2e; }
+.btn.big { min-height: 64px; font-size: 22px; margin-top: 20px; background: linear-gradient(135deg, #6ea4bf, #c2efeb); border-color: #4f86a3; color: #082540; }
 .btn.danger { color: var(--err); border-color: var(--err); }
-.btn.big:disabled { background: #aaa3bd; border-color: #aaa3bd; opacity: 1; }
+.btn.big:disabled { background: #9fb3c4; border-color: #9fb3c4; opacity: 1; }
 .btn.small { padding: 8px 6px; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btns { display: flex; gap: 8px; }
@@ -106,14 +106,14 @@ p { margin: 4px 0; }
 }
 .tab {
   min-height: var(--tabbar-h); font: inherit; font-size: 18px; font-weight: 700;
-  background: var(--forest); color: #fff; border: 0; border-right: 1px solid #5b4b61; cursor: pointer;
+  background: var(--forest); color: #fff; border: 0; border-right: 1px solid #4a6178; cursor: pointer;
 }
 .tab:last-child { border-right: 0; }
-.tab.active { background: var(--accent); color: #331e36; }
+.tab.active { background: var(--accent); color: #06284a; }
 
 /* ---- header banner ---- */
 .banner-top {
-  background: linear-gradient(115deg, #41337a 0%, #41337a 50%, #6ea4bf 100%); color: #fff; border-bottom: 5px solid var(--accent);
+  background: linear-gradient(115deg, #034078 0%, #034078 50%, #6ea4bf 100%); color: #fff; border-bottom: 5px solid var(--accent);
   padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
   display: flex; justify-content: space-between; align-items: baseline;
 }
@@ -148,17 +148,17 @@ p { margin: 4px 0; }
    POLISH: cleaner surfaces, soft shadows, a steel-blue accent.
    Soft surfaces, rounded corners, a steel-blue accent.
    ===================================================================== */
-body { background: #ecfee8; }
+body { background: #e6f8f6; }
 
-.banner-top { padding-top: calc(14px + env(safe-area-inset-top)); padding-bottom: 12px; box-shadow: 0 3px 8px rgba(51, 30, 54, 0.25); align-items: center; border-radius: 0 0 22px 22px; }
+.banner-top { padding-top: calc(14px + env(safe-area-inset-top)); padding-bottom: 12px; box-shadow: 0 3px 8px rgba(6, 40, 74, 0.25); align-items: center; border-radius: 0 0 22px 22px; }
 .banner-top .brand { font-size: 28px; letter-spacing: 0.5px; }
-/* Page titles: indigo with a short steel-blue underline */
+/* Page titles: deep blue with a short steel-blue underline */
 h1 { position: relative; padding-bottom: 12px; margin-bottom: 14px; }
 h1::after { content: ''; position: absolute; left: 0; bottom: 0; width: 64px; height: 6px; border-radius: 3px; background: var(--accent); }
 
-/* Cards: off-white on the honeydew page, thin pale aqua border, steel-blue edge, soft shadow */
+/* Cards: off-white on the pale aqua page, thin pale aqua border, steel-blue edge, soft shadow */
 .card, .tile, .list-item {
-  background: #ffffff; border: 2px solid #b3d6d3; box-shadow: 0 2px 8px rgba(65, 51, 122, 0.12);
+  background: #ffffff; border: 2px solid #b3d6d3; box-shadow: 0 2px 8px rgba(3, 64, 120, 0.12);
 }
 .card { border-left: 8px solid var(--accent); border-radius: 26px; padding: 16px; }
 .list-item { border-left: 8px solid var(--accent); }
@@ -166,11 +166,11 @@ h1::after { content: ''; position: absolute; left: 0; bottom: 0; width: 64px; he
 .list-item strong { color: var(--primary); }
 
 /* Buttons: rounder, with a little lift */
-.btn, .choice, .range button { border-radius: 999px; box-shadow: 0 2px 4px rgba(51, 30, 54, 0.2); }
+.btn, .choice, .range button { border-radius: 999px; box-shadow: 0 2px 4px rgba(6, 40, 74, 0.2); }
 .btn:active:not(:disabled), .choice:active, .range button:active { transform: translateY(1px); box-shadow: none; }
 .btn.big { box-shadow: 0 4px 12px rgba(110, 164, 191, 0.45); letter-spacing: 0.5px; }
 .btn.big:disabled { box-shadow: none; }
-.choice.selected { box-shadow: 0 3px 8px rgba(65, 51, 122, 0.4); }
+.choice.selected { box-shadow: 0 3px 8px rgba(3, 64, 120, 0.4); }
 
 /* Number boxes stay high contrast so they are easy to see */
 .num, .date, .text, .select { border-color: var(--primary); background: #fff; }
@@ -178,9 +178,9 @@ h1::after { content: ''; position: absolute; left: 0; bottom: 0; width: 64px; he
 /* Banners */
 .banner { border-width: 2px; border-left-width: 8px; }
 
-/* Tab bar: midnight violet with a steel-blue top edge; active tab is steel blue */
-.tabbar { box-shadow: 0 -3px 10px rgba(51, 30, 54, 0.25); }
-.tab.active { box-shadow: inset 0 4px 0 #331e36; }
+/* Tab bar: deep blue with a steel-blue top edge; active tab is steel blue */
+.tabbar { box-shadow: 0 -3px 10px rgba(6, 40, 74, 0.25); }
+.tab.active { box-shadow: inset 0 4px 0 #06284a; }
 
 /* Offline notice under the header */
 .offline { margin: 0; padding: 10px 16px; background: #fff3c4; color: #3a2a00; font-weight: 700; text-align: center; border-bottom: 2px solid #b38600; }
@@ -199,11 +199,11 @@ h1::after { content: ''; position: absolute; left: 0; bottom: 0; width: 64px; he
 .filebtn { text-align: center; line-height: 32px; cursor: pointer; }
 .filebtn input { display: none; }
 
-/* ---- Bloom extras: softer and rounder ---- */
+/* ---- Extras: softer and rounder ---- */
 .card { border-left-color: var(--accent); }
-.tile .big-number { background: linear-gradient(135deg, #41337a, #4f86a3); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.range button.selected, .choice.selected { background: linear-gradient(135deg, #41337a, #5a49a0); }
-body { background: radial-gradient(1200px 420px at 50% -100px, #c2efeb 0%, #ecfee8 70%) no-repeat, #ecfee8; }
+.tile .big-number { background: linear-gradient(135deg, #034078, #4f86a3); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.range button.selected, .choice.selected { background: linear-gradient(135deg, #034078, #1f5f9a); }
+body { background: radial-gradient(1200px 420px at 50% -100px, #c2efeb 0%, #e6f8f6 70%) no-repeat, #e6f8f6; }
 h1, h2, .brand, .btn, .choice, .tab { font-family: ui-rounded, 'SF Pro Rounded', 'Nunito', 'Quicksand', system-ui, sans-serif; }
 h1::after { width: 72px; background: linear-gradient(90deg, #6ea4bf, #c2efeb); }
 .list-item { border-radius: 22px; }
@@ -213,7 +213,7 @@ h1::after { width: 72px; background: linear-gradient(90deg, #6ea4bf, #c2efeb); }
 
 /* ---- exercise notes, one-measure rows, editor ---- */
 .row.one { grid-template-columns: 64px 1fr; }
-.notes { margin: 6px 0; padding: 10px 12px; border-radius: 14px; background: #c2efeb; color: #331e36; font-weight: 600; }
+.notes { margin: 6px 0; padding: 10px 12px; border-radius: 14px; background: #c2efeb; color: #06284a; font-weight: 600; }
 textarea.text { min-height: 112px; resize: vertical; }
 .pillrow { display: grid; gap: 8px; }
 .kindbtn { text-align: left; min-height: 56px; padding: 8px 14px; font: inherit; font-weight: 700; border: 2px solid var(--primary); border-radius: 16px; background: #fff; color: var(--text); cursor: pointer; }
