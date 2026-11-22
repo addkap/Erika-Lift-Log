@@ -9,9 +9,9 @@ import { templateName } from '../lib/model';
 import { WORKOUT_TYPES } from '../types';
 
 // Palette colours for the charts (both clear 3:1 against white).
-const BLUE = '#034078'; // deep blue
-const RED = '#4f86a3'; // deeper steel blue
-const TICK = { fontSize: 15, fill: '#082540' };
+const BLUE = '#005a9c'; // blue
+const RED = '#2a8fc4'; // mid sky blue
+const TICK = { fontSize: 15, fill: '#1b365d' };
 
 export default function SummaryPage() {
   const workouts = useLiveQuery(() => db.workouts.toArray(), [], []);

@@ -1,16 +1,16 @@
 /* High contrast, big text, big tap targets. Nothing here is smaller than 18px or 48px. */
 :root {
-  /* Palette: deep blue #034078, steel blue #6EA4BF, frozen water #C2EFEB (plus lighter/darker shades of them).
-     Steel blue is used for accents and big buttons with DARK text (white on it is too faint). Text contrast stays above 4.5:1. */
-  --bg: #e6f8f6;
-  --text: #082540;
-  --muted: #4a6178;
-  --primary: #034078;   /* deep blue */
+  /* Palette: navy #1B365D, blue #005A9C, sky #60C1E5, light aqua #A0E0EF (plus lighter tints of them for the page).
+     Sky blue is used for accents and big buttons with DARK text (white on it is too faint). Text contrast stays above 4.5:1. */
+  --bg: #e4f6fb;
+  --text: #1b365d;
+  --muted: #4a5f80;
+  --primary: #005a9c;   /* blue */
   --primary-text: #ffffff;
-  --accent: #6ea4bf;    /* steel blue */
-  --forest: #06284a;
-  --border: #034078;
-  --card: #eaf8f7;
+  --accent: #60c1e5;    /* sky blue */
+  --forest: #1b365d;
+  --border: #005a9c;
+  --card: #ecf8fc;
   --ok: #1f5a35;
   --err: #a00000;
   --tabbar-h: 68px;
@@ -48,7 +48,7 @@ p { margin: 4px 0; }
   cursor: pointer;
 }
 .btn.primary { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
-.btn.big { min-height: 64px; font-size: 22px; margin-top: 20px; background: linear-gradient(135deg, #6ea4bf, #c2efeb); border-color: #4f86a3; color: #082540; }
+.btn.big { min-height: 64px; font-size: 22px; margin-top: 20px; background: linear-gradient(135deg, #60c1e5, #a0e0ef); border-color: #2a8fc4; color: #1b365d; }
 .btn.danger { color: var(--err); border-color: var(--err); }
 .btn.big:disabled { background: #9fb3c4; border-color: #9fb3c4; opacity: 1; }
 .btn.small { padding: 8px 6px; }
@@ -106,14 +106,14 @@ p { margin: 4px 0; }
 }
 .tab {
   min-height: var(--tabbar-h); font: inherit; font-size: 18px; font-weight: 700;
-  background: var(--forest); color: #fff; border: 0; border-right: 1px solid #4a6178; cursor: pointer;
+  background: var(--forest); color: #fff; border: 0; border-right: 1px solid #4a5f80; cursor: pointer;
 }
 .tab:last-child { border-right: 0; }
-.tab.active { background: var(--accent); color: #06284a; }
+.tab.active { background: var(--accent); color: #1b365d; }
 
 /* ---- header banner ---- */
 .banner-top {
-  background: linear-gradient(115deg, #034078 0%, #034078 50%, #6ea4bf 100%); color: #fff; border-bottom: 5px solid var(--accent);
+  background: linear-gradient(115deg, #1b365d 0%, #005a9c 55%, #60c1e5 100%); color: #fff; border-bottom: 5px solid var(--accent);
   padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
   display: flex; justify-content: space-between; align-items: baseline;
 }
@@ -148,9 +148,9 @@ p { margin: 4px 0; }
    POLISH: cleaner surfaces, soft shadows, a steel-blue accent.
    Soft surfaces, rounded corners, a steel-blue accent.
    ===================================================================== */
-body { background: #e6f8f6; }
+body { background: #e4f6fb; }
 
-.banner-top { padding-top: calc(14px + env(safe-area-inset-top)); padding-bottom: 12px; box-shadow: 0 3px 8px rgba(6, 40, 74, 0.25); align-items: center; border-radius: 0 0 22px 22px; }
+.banner-top { padding-top: calc(14px + env(safe-area-inset-top)); padding-bottom: 12px; box-shadow: 0 3px 8px rgba(27, 54, 93, 0.25); align-items: center; border-radius: 0 0 22px 22px; }
 .banner-top .brand { font-size: 28px; letter-spacing: 0.5px; }
 /* Page titles: deep blue with a short steel-blue underline */
 h1 { position: relative; padding-bottom: 12px; margin-bottom: 14px; }
@@ -158,7 +158,7 @@ h1::after { content: ''; position: absolute; left: 0; bottom: 0; width: 64px; he
 
 /* Cards: off-white on the pale aqua page, thin pale aqua border, steel-blue edge, soft shadow */
 .card, .tile, .list-item {
-  background: #ffffff; border: 2px solid #b3d6d3; box-shadow: 0 2px 8px rgba(3, 64, 120, 0.12);
+  background: #ffffff; border: 2px solid #a8d3e3; box-shadow: 0 2px 8px rgba(0, 90, 156, 0.12);
 }
 .card { border-left: 8px solid var(--accent); border-radius: 26px; padding: 16px; }
 .list-item { border-left: 8px solid var(--accent); }
@@ -166,11 +166,11 @@ h1::after { content: ''; position: absolute; left: 0; bottom: 0; width: 64px; he
 .list-item strong { color: var(--primary); }
 
 /* Buttons: rounder, with a little lift */
-.btn, .choice, .range button { border-radius: 999px; box-shadow: 0 2px 4px rgba(6, 40, 74, 0.2); }
+.btn, .choice, .range button { border-radius: 999px; box-shadow: 0 2px 4px rgba(27, 54, 93, 0.2); }
 .btn:active:not(:disabled), .choice:active, .range button:active { transform: translateY(1px); box-shadow: none; }
-.btn.big { box-shadow: 0 4px 12px rgba(110, 164, 191, 0.45); letter-spacing: 0.5px; }
+.btn.big { box-shadow: 0 4px 12px rgba(96, 193, 229, 0.45); letter-spacing: 0.5px; }
 .btn.big:disabled { box-shadow: none; }
-.choice.selected { box-shadow: 0 3px 8px rgba(3, 64, 120, 0.4); }
+.choice.selected { box-shadow: 0 3px 8px rgba(0, 90, 156, 0.4); }
 
 /* Number boxes stay high contrast so they are easy to see */
 .num, .date, .text, .select { border-color: var(--primary); background: #fff; }
@@ -179,8 +179,8 @@ h1::after { content: ''; position: absolute; left: 0; bottom: 0; width: 64px; he
 .banner { border-width: 2px; border-left-width: 8px; }
 
 /* Tab bar: deep blue with a steel-blue top edge; active tab is steel blue */
-.tabbar { box-shadow: 0 -3px 10px rgba(6, 40, 74, 0.25); }
-.tab.active { box-shadow: inset 0 4px 0 #06284a; }
+.tabbar { box-shadow: 0 -3px 10px rgba(27, 54, 93, 0.25); }
+.tab.active { box-shadow: inset 0 4px 0 #1b365d; }
 
 /* Offline notice under the header */
 .offline { margin: 0; padding: 10px 16px; background: #fff3c4; color: #3a2a00; font-weight: 700; text-align: center; border-bottom: 2px solid #b38600; }
@@ -193,19 +193,19 @@ h1::after { content: ''; position: absolute; left: 0; bottom: 0; width: 64px; he
 .syncbar.ok { background: #e3f4e7; color: #0a5c1f; border-color: #0a5c1f; }
 .syncbar.warn { background: #fff3c4; color: #3a2a00; border-color: #b38600; }
 .syncbar.bad { background: #fdeaea; color: #8a0000; border-color: #a00000; }
-.syncbar.busy { background: #dcf3f0; color: var(--primary); border-color: var(--primary); }
-.folder-row { padding: 10px 0; border-top: 1px solid #b3d6d3; }
+.syncbar.busy { background: #d8f1f8; color: var(--primary); border-color: var(--primary); }
+.folder-row { padding: 10px 0; border-top: 1px solid #a8d3e3; }
 .folder-row strong { display: block; font-size: 20px; word-break: break-word; }
 .filebtn { text-align: center; line-height: 32px; cursor: pointer; }
 .filebtn input { display: none; }
 
 /* ---- Extras: softer and rounder ---- */
 .card { border-left-color: var(--accent); }
-.tile .big-number { background: linear-gradient(135deg, #034078, #4f86a3); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.range button.selected, .choice.selected { background: linear-gradient(135deg, #034078, #1f5f9a); }
-body { background: radial-gradient(1200px 420px at 50% -100px, #c2efeb 0%, #e6f8f6 70%) no-repeat, #e6f8f6; }
+.tile .big-number { background: linear-gradient(135deg, #005a9c, #2a8fc4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.range button.selected, .choice.selected { background: linear-gradient(135deg, #005a9c, #1b6fb0); }
+body { background: radial-gradient(1200px 420px at 50% -100px, #a0e0ef 0%, #e4f6fb 70%) no-repeat, #e4f6fb; }
 h1, h2, .brand, .btn, .choice, .tab { font-family: ui-rounded, 'SF Pro Rounded', 'Nunito', 'Quicksand', system-ui, sans-serif; }
-h1::after { width: 72px; background: linear-gradient(90deg, #6ea4bf, #c2efeb); }
+h1::after { width: 72px; background: linear-gradient(90deg, #60c1e5, #a0e0ef); }
 .list-item { border-radius: 22px; }
 .tile { border-radius: 22px; }
 .num, .date, .text, .select { border-radius: 16px; }
@@ -213,7 +213,7 @@ h1::after { width: 72px; background: linear-gradient(90deg, #6ea4bf, #c2efeb); }
 
 /* ---- exercise notes, one-measure rows, editor ---- */
 .row.one { grid-template-columns: 64px 1fr; }
-.notes { margin: 6px 0; padding: 10px 12px; border-radius: 14px; background: #c2efeb; color: #06284a; font-weight: 600; }
+.notes { margin: 6px 0; padding: 10px 12px; border-radius: 14px; background: #a0e0ef; color: #1b365d; font-weight: 600; }
 textarea.text { min-height: 112px; resize: vertical; }
 .pillrow { display: grid; gap: 8px; }
 .kindbtn { text-align: left; min-height: 56px; padding: 8px 14px; font: inherit; font-weight: 700; border: 2px solid var(--primary); border-radius: 16px; background: #fff; color: var(--text); cursor: pointer; }
@@ -223,7 +223,7 @@ textarea.text { min-height: 112px; resize: vertical; }
 
 /* ---- weekly streak ---- */
 .streak-count { font-size: 22px; font-weight: 700; margin: 2px 0; }
-.streak-count .big-number { font-size: 44px; font-weight: 900; line-height: 1; background: linear-gradient(135deg, #034078, #4f86a3); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.streak-count .big-number { font-size: 44px; font-weight: 900; line-height: 1; background: linear-gradient(135deg, #005a9c, #2a8fc4); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .dots { display: flex; gap: 10px; margin: 8px 0 10px; }
 .dot { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--primary); background: #fff; }
-.dot.on { background: #6ea4bf; }
+.dot.on { background: #60c1e5; }
