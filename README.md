@@ -7,6 +7,7 @@ This is a **separate app** built from the original Lift Log. It has its own webs
 - **Log a workout:** pick Lower Body, Upper Body, Full Body or Physical Therapy, tap Start, enter the numbers, tap Finish.
 - **Build your own workouts:** Settings, **Edit my workouts**. Add, remove, reorder and rename exercises whenever the plan changes (for example when physical therapy changes).
 - **Three ways to count an exercise:** weight and reps, reps only (bodyweight or bands), or a timed hold in seconds.
+- **Weekly streak:** work out 5 times in a week (Monday to Sunday) and a streak starts; every following week in a row with 5 workouts adds one. It shows on the Workout and Summary screens.
 - **History and Summary:** fix old workouts, see workouts per week, and charts for each exercise (weight, reps, or seconds, whichever fits).
 - **Works with no signal.** Everything saves on the phone first.
 - **OneDrive sync:** a background copy goes to one file in a OneDrive folder, so family can see the same log.
@@ -147,6 +148,13 @@ Good to know:
 - **During a workout**, "Add another exercise" lets you add something for today only, or tick **Keep in this workout going forward** to add it to the list. If you skip or add exercises, a **Keep this list?** card offers to save today's list as the new default.
 
 ---
+
+## How the weekly streak works
+- A week runs **Monday to Sunday**. Every saved workout counts (Lower, Upper, Full Body and Physical Therapy; two on the same day count as two).
+- The first week with **5 or more** workouts starts a streak of 1. Each following week in a row that also reaches 5 adds one.
+- The **week in progress never breaks** a streak. Until it ends, the app shows the streak as it stood after last week and says how many more workouts keep it going; the moment she reaches 5 this week, this week counts.
+- A **whole week under 5** ends the streak. The Summary also shows her best streak.
+- It is worked out from saved workouts each time, so fixing a date or deleting a workout in History changes it. The number 5 is `STREAK_GOAL` in `src/lib/stats.ts`, and the rules are tested in `src/lib/stats.test.ts`.
 
 ## How the weight suggestion works
 This applies to **weight and reps** exercises with the suggestion switched on. For an exercise in a saved workout, only the sets at the **heaviest weight** that day count (this ignores light warm-up sets).

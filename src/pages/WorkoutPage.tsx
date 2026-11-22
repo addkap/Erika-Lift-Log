@@ -9,6 +9,7 @@ import { KIND_LABELS, templateName } from '../lib/model';
 import { draftMatchesTemplate } from '../lib/templates';
 import { DEFAULT_WORKOUT_NAMES, WORKOUT_TYPES, type Draft, type Exercise, type ExerciseKind, type Template, type Workout, type WorkoutType } from '../types';
 import ExerciseCard from '../components/ExerciseCard';
+import StreakCard from '../components/StreakCard';
 import { isConfigured } from '../sync/auth';
 import { useSyncStatus } from '../sync/useSyncStatus';
 
@@ -90,6 +91,7 @@ function StartScreen({ saved, onStart, onGoSettings, onEditWorkouts }: { saved: 
   return (
     <>
       <h1>Start a workout</h1>
+      <StreakCard />
       {noneBuilt && (
         <section className="card">
           <h2>Welcome! Let’s set up your workouts</h2>

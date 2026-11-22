@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { db } from '../db';
+import StreakCard from '../components/StreakCard';
 import { formatShortDate, formatWeekday, todayLocal } from '../lib/dates';
 import { RANGES, exerciseSessions, exerciseView, loggedExercises, rangeStart, summarize, type Range } from '../lib/stats';
 import { templateName } from '../lib/model';
@@ -37,6 +38,7 @@ export default function SummaryPage() {
   return (
     <>
       <h1>Summary</h1>
+      <StreakCard />
 
       <div className="range" role="group" aria-label="Time range">
         {RANGES.map((r) => (

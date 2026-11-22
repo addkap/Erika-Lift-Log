@@ -176,3 +176,59 @@ export function exerciseView(kind: ExerciseKind, points: SessionPoint[]): Exerci
     bars: { title: 'Total volume per workout', note: 'Sets × reps × weight, in pounds.', key: 'volume', name: 'Volume (lb)' },
   };
 }
+
+// ---------------------------------------------------------------- weekly streak
+
+/** Workouts needed in a Monday-Sunday week for that week to count toward the streak. */
+export const STREAK_GOAL = 5;
+
+export interface StreakInfo {
+  goal: number;
+  /** Weeks in a row (ending with this week if it is done, otherwise ending last week) that reached the goal. */
+  current: number;
+  /** The longest run of weeks in a row that reached the goal. */
+  best: number;
+  /** Workouts so far this week (Monday to today). */
+  thisWeek: number;
+  /** This week has reached the goal, so it is already counted in `current`. */
+  thisWeekDone: boolean;
+  /** Workouts still needed this week to keep the streak going (0 once done). */
+  toGo: number;
+}
+
+/**
+ * The weekly streak. A streak starts the first week she logs `goal` workouts and grows by one for every
+ * following week in a row that also reaches it. The week in progress never breaks a streak: until it ends
+ * the streak shows as it stood after last week, and counts this week as soon as the goal is reached.
+ * A whole week below the goal ends it. Everything is worked out from saved workouts, so editing or deleting
+ * an old workout changes the streak with it. Several workouts on one day each count.
+ */
+export function streakInfo(all: Workout[], today: string, goal = STREAK_GOAL): StreakInfo {
+  const thisMonday = weekStart(today);
+  const counts = new Map<string, number>();
+  for (const w of liveWorkouts(all)) {
+    const monday = weekStart(w.date);
+    if (monday > thisMonday) continue; // a workout dated in a future week does not count yet
+    counts.set(monday, (counts.get(monday) ?? 0) + 1);
+  }
+  const thisWeek = counts.get(thisMonday) ?? 0;
+  const thisWeekDone = thisWeek >= goal;
+
+  // Current: walk backwards from this week (if done) or from last week.
+  let current = 0;
+  for (let wk = thisWeekDone ? thisMonday : addDays(thisMonday, -7); (counts.get(wk) ?? 0) >= goal; wk = addDays(wk, -7)) current++;
+
+  // Best: the longest run anywhere, oldest week to this week.
+  const mondays = [...counts.keys()].sort();
+  let best = 0;
+  let run = 0;
+  let prev: string | null = null;
+  for (const wk of mondays) {
+    if ((counts.get(wk) ?? 0) < goal) { run = 0; prev = null; continue; }
+    run = prev !== null && addDays(prev, 7) === wk ? run + 1 : 1;
+    prev = wk;
+    best = Math.max(best, run);
+  }
+
+  return { goal, current, best, thisWeek, thisWeekDone, toGo: Math.max(0, goal - thisWeek) };
+}

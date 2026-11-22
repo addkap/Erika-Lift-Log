@@ -220,3 +220,10 @@ textarea.text { min-height: 112px; resize: vertical; }
 .kindbtn.selected { background: var(--primary); color: #fff; }
 .err-text { color: var(--err); font-weight: 700; }
 .hint { color: var(--muted); font-size: 18px; }
+
+/* ---- weekly streak ---- */
+.streak-count { font-size: 22px; font-weight: 700; margin: 2px 0; }
+.streak-count .big-number { font-size: 44px; font-weight: 900; line-height: 1; background: linear-gradient(135deg, #034078, #4f86a3); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.dots { display: flex; gap: 10px; margin: 8px 0 10px; }
+.dot { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--primary); background: #fff; }
+.dot.on { background: #6ea4bf; }

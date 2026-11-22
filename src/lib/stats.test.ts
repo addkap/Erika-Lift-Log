@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { Workout, WorkoutType } from '../types';
 import { applyDraftToWorkout, markDeleted, setCell, workoutToDraft } from './draft';
-import { exerciseSessions, exerciseStats, exerciseView, loggedExercises, summarize } from './stats';
+import { addDays } from './dates';
+import { exerciseSessions, exerciseStats, exerciseView, loggedExercises, streakInfo, summarize } from './stats';
 
 let n = 0;
 const w = (date: string, type: WorkoutType = 'lower', sets = [{ weight: 100, reps: 10 }], extra: Partial<Workout> = {}): Workout => ({
@@ -182,5 +183,67 @@ describe('Physical Therapy in the summary', () => {
     const s = summarize([w('a', 'pt'), w('b', 'pt'), w('c', 'lower')], 'all', '2026-11-21');
     expect(s.byType).toEqual({ lower: 1, upper: 0, full: 0, pt: 2 });
     expect(s.total).toBe(3);
+  });
+});
+
+describe('weekly streak', () => {
+  // Weeks run Monday-Sunday. 2026-11-16 is a Monday; today in these tests is Wednesday 2026-11-25 unless noted.
+  const day = (date: string, n = 1): Workout[] =>
+    Array.from({ length: n }, (_, i) => ({ id: `${date}-${i}`, date, type: 'lower' as const, entries: [], createdAt: i, updatedAt: 1 }));
+  const week = (monday: string, n: number): Workout[] =>
+    Array.from({ length: n }, (_, i) => day(addDays(monday, i))[0]).map((w, i) => ({ ...w, id: `${monday}-${i}` }));
+  const T = '2026-11-25'; // Wednesday of the week starting 2026-11-23
+
+  it('no workouts, no streak', () => {
+    expect(streakInfo([], T)).toEqual({ goal: 5, current: 0, best: 0, thisWeek: 0, thisWeekDone: false, toGo: 5 });
+  });
+  it('five workouts in a week starts a streak of 1', () => {
+    const s = streakInfo(week('2026-11-23', 5), '2026-11-27');
+    expect(s).toMatchObject({ current: 1, best: 1, thisWeek: 5, thisWeekDone: true, toGo: 0 });
+  });
+  it('four is not enough', () => {
+    expect(streakInfo(week('2026-11-16', 4), '2026-11-27')).toMatchObject({ current: 0, best: 0, thisWeek: 0 });
+    expect(streakInfo(week('2026-11-23', 4), '2026-11-29')).toMatchObject({ current: 0, thisWeek: 4, toGo: 1 });
+  });
+  it('every week in a row that reaches five continues the streak', () => {
+    const ws = [...week('2026-11-02', 5), ...week('2026-11-09', 6), ...week('2026-11-16', 5)];
+    expect(streakInfo(ws, '2026-11-22')).toMatchObject({ current: 3, best: 3, thisWeekDone: true }); // Sunday of the 3rd week
+  });
+  it('the week in progress does not break the streak, and counts once it reaches five', () => {
+    const ws = [...week('2026-11-09', 5), ...week('2026-11-16', 5), ...week('2026-11-23', 2)];
+    expect(streakInfo(ws, T)).toMatchObject({ current: 2, thisWeek: 2, thisWeekDone: false, toGo: 3 });
+    const done = [...week('2026-11-09', 5), ...week('2026-11-16', 5), ...week('2026-11-23', 5)];
+    expect(streakInfo(done, '2026-11-29')).toMatchObject({ current: 3, thisWeekDone: true, toGo: 0 });
+  });
+  it('a whole week below five ends it, and a new run starts later', () => {
+    const ws = [...week('2026-10-26', 5), ...week('2026-11-02', 5), ...week('2026-11-09', 3), ...week('2026-11-16', 5)];
+    expect(streakInfo(ws, '2026-11-22')).toMatchObject({ current: 1, best: 2 });
+  });
+  it('a missed full week resets the current streak but keeps the best', () => {
+    const ws = [...week('2026-11-02', 5), ...week('2026-11-09', 5)]; // nothing the week of the 16th
+    expect(streakInfo(ws, T)).toMatchObject({ current: 0, best: 2 });
+  });
+  it('a skipped week in the middle does not join two runs', () => {
+    const ws = [...week('2026-10-26', 5), ...week('2026-11-09', 5)];
+    expect(streakInfo(ws, '2026-11-15')).toMatchObject({ current: 1, best: 1 });
+  });
+  it('Saturday and Sunday belong to the same week as the weekdays before them', () => {
+    const ws = [...day('2026-11-16'), ...day('2026-11-18'), ...day('2026-11-20'), ...day('2026-11-21'), ...day('2026-11-22')];
+    expect(streakInfo(ws, '2026-11-22')).toMatchObject({ current: 1, thisWeek: 5 });
+  });
+  it('several workouts on one day each count', () => {
+    expect(streakInfo(day('2026-11-23', 5), T)).toMatchObject({ thisWeek: 5, thisWeekDone: true, current: 1 });
+  });
+  it('deleted workouts do not count, so deleting one can end the streak', () => {
+    const ws = week('2026-11-16', 5);
+    expect(streakInfo(ws, '2026-11-22').current).toBe(1);
+    ws[0] = { ...ws[0], deletedAt: 5 };
+    expect(streakInfo(ws, '2026-11-22').current).toBe(0);
+  });
+  it('workouts dated in a future week do not count yet', () => {
+    expect(streakInfo(week('2026-12-07', 5), T)).toMatchObject({ current: 0, best: 0 });
+  });
+  it('the goal can be changed', () => {
+    expect(streakInfo(week('2026-11-16', 3), '2026-11-22', 3).current).toBe(1);
   });
 });
