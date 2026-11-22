@@ -1,0 +1,205 @@
+/* High contrast, big text, big tap targets. Nothing here is smaller than 18px or 48px. */
+:root {
+  /* Buffalo Bills colours: royal blue #00338D, red #C60C30, navy, white */
+  --bg: #ffffff;
+  --text: #0a1020;
+  --muted: #38425a;
+  --primary: #00338d;   /* royal blue */
+  --primary-text: #ffffff;
+  --accent: #c60c30;    /* Bills red */
+  --navy: #0c2340;
+  --border: #00338d;
+  --card: #eef2fb;
+  --ok: #0a5c1f;
+  --err: #a00000;
+  --tabbar-h: 68px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body {
+  font-family: -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 18px;
+  line-height: 1.4;
+  -webkit-text-size-adjust: 100%;
+}
+
+.page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px 16px calc(var(--tabbar-h) + 32px + env(safe-area-inset-bottom));
+}
+h1 { font-size: 30px; margin: 8px 0 12px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+h2 { font-size: 22px; margin: 0 0 4px; color: var(--navy); }
+p { margin: 4px 0; }
+.muted { color: var(--muted); }
+.suggest { font-weight: 700; color: var(--accent); }
+.label { display: block; font-weight: 700; margin: 16px 0 6px; }
+
+/* ---- buttons ---- */
+.btn {
+  display: block; width: 100%;
+  min-height: 52px; padding: 10px 16px;
+  font: inherit; font-weight: 700;
+  background: #fff; color: var(--text);
+  border: 2px solid var(--border); border-radius: 12px;
+  margin: 8px 0;
+  cursor: pointer;
+}
+.btn.primary { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
+.btn.big { min-height: 64px; font-size: 22px; margin-top: 20px; background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.danger { color: var(--err); border-color: var(--err); }
+.btn.big:disabled { background: #7d8498; border-color: #7d8498; opacity: 1; }
+.btn.small { padding: 8px 6px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btns { display: flex; gap: 8px; }
+.btns .btn { flex: 1; }
+
+/* ---- workout picker ---- */
+.choices { display: grid; gap: 8px; }
+.choice {
+  min-height: 64px; font: inherit; font-size: 22px; font-weight: 700;
+  background: #fff; color: var(--text);
+  border: 3px solid var(--border); border-radius: 12px; cursor: pointer;
+}
+.choice.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* ---- inputs ---- */
+.date, .text, .num.wide {
+  display: block; width: 100%; min-height: 56px; padding: 8px 12px;
+  font: inherit; font-size: 20px; color: var(--text); background: #fff;
+  border: 2px solid var(--border); border-radius: 12px;
+}
+.num {
+  width: 100%; min-height: 56px; padding: 8px 10px;
+  font: inherit; font-size: 24px; font-weight: 700; text-align: center;
+  color: var(--text); background: #fff;
+  border: 2px solid var(--border); border-radius: 12px;
+}
+.num:focus, .date:focus, .text:focus { outline: 4px solid #ffbf00; outline-offset: 0; }
+
+/* ---- exercise cards ---- */
+.card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 14px; margin: 14px 0; }
+.rows { margin: 10px 0 4px; }
+.row { display: grid; grid-template-columns: 64px 1fr 1fr; gap: 8px; align-items: center; margin: 6px 0; }
+.row.head { font-weight: 700; text-align: center; margin-bottom: 0; }
+.setno { font-weight: 700; }
+
+.check { display: flex; gap: 12px; align-items: center; min-height: 52px; margin: 12px 0; font-weight: 700; }
+.check input { width: 32px; height: 32px; flex: none; }
+
+.banner { padding: 12px 14px; border-radius: 12px; font-weight: 700; margin: 12px 0; border: 2px solid; }
+.banner.ok { color: var(--ok); border-color: var(--ok); background: #e7f6ea; }
+.banner.err { color: var(--err); border-color: var(--err); background: #fdeaea; }
+
+/* ---- settings ---- */
+.setting { display: grid; grid-template-columns: 1fr 110px; gap: 10px; align-items: center; margin: 10px 0; }
+.setting .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+/* ---- bottom tab bar ---- */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  background: var(--primary); border-top: 4px solid var(--accent);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab {
+  min-height: var(--tabbar-h); font: inherit; font-size: 18px; font-weight: 700;
+  background: var(--primary); color: #fff; border: 0; border-right: 1px solid #4a6bb5; cursor: pointer;
+}
+.tab:last-child { border-right: 0; }
+.tab.active { background: var(--accent); color: #fff; }
+
+/* ---- Bills header banner ---- */
+.banner-top {
+  background: var(--primary); color: #fff; border-bottom: 5px solid var(--accent);
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.banner-top .brand { font-size: 26px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; }
+.banner-top .cheer { font-size: 18px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.page { padding-top: 12px; }
+
+/* ---- History list ---- */
+.list-item {
+  display: block; width: 100%; text-align: left; min-height: 72px; margin: 8px 0; padding: 10px 14px;
+  font: inherit; color: var(--text); background: var(--card);
+  border: 2px solid var(--border); border-left: 10px solid var(--accent); border-radius: 12px; cursor: pointer;
+}
+.list-item strong { display: block; font-size: 20px; }
+
+/* ---- Summary ---- */
+.range { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0 12px; }
+.range button {
+  min-height: 52px; font: inherit; font-size: 18px; font-weight: 700; padding: 4px;
+  background: #fff; color: var(--text); border: 2px solid var(--border); border-radius: 10px; cursor: pointer;
+}
+.range button.selected { background: var(--primary); color: #fff; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+.tile { background: var(--card); border: 2px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+.tile .big-number { display: block; font-size: 32px; font-weight: 900; color: var(--primary); line-height: 1.1; }
+.tile.wide { grid-column: 1 / -1; }
+.chart { width: 100%; height: 240px; margin: 8px 0; }
+.select { display: block; width: 100%; min-height: 56px; padding: 8px 12px; font: inherit; font-size: 20px; font-weight: 700;
+  color: var(--text); background: #fff; border: 2px solid var(--border); border-radius: 12px; }
+.type-line { display: flex; justify-content: space-between; padding: 4px 0; font-weight: 700; }
+
+/* =====================================================================
+   POLISH: cleaner surfaces, soft shadows, a red badge in the header.
+   Same Bills blue and red as before, just tidier.
+   ===================================================================== */
+body { background: #f3f6fc; }
+
+.banner-top { padding-top: calc(14px + env(safe-area-inset-top)); padding-bottom: 12px; box-shadow: 0 3px 8px rgba(0, 20, 70, 0.25); align-items: center; }
+.banner-top .brand { font-size: 28px; letter-spacing: 2px; }
+.banner-top .cheer {
+  background: var(--accent); color: #fff; padding: 4px 12px; border-radius: 999px;
+  font-size: 18px; font-weight: 900; letter-spacing: 1px; white-space: nowrap;
+}
+
+/* Page titles: blue with a short red underline */
+h1 { position: relative; padding-bottom: 12px; margin-bottom: 14px; }
+h1::after { content: ''; position: absolute; left: 0; bottom: 0; width: 64px; height: 6px; border-radius: 3px; background: var(--accent); }
+
+/* Cards: white on the pale page, thin blue-grey border, red edge, soft shadow */
+.card, .tile, .list-item {
+  background: #fff; border: 2px solid #b9c6e4; box-shadow: 0 2px 8px rgba(0, 51, 141, 0.12);
+}
+.card { border-left: 8px solid var(--accent); border-radius: 14px; padding: 16px; }
+.list-item { border-left: 8px solid var(--accent); }
+.tile { border-top: 6px solid var(--accent); border-radius: 14px; }
+.list-item strong { color: var(--primary); }
+
+/* Buttons: rounder, with a little lift */
+.btn, .choice, .range button { border-radius: 14px; box-shadow: 0 2px 4px rgba(0, 20, 70, 0.2); }
+.btn:active:not(:disabled), .choice:active, .range button:active { transform: translateY(1px); box-shadow: none; }
+.btn.big { box-shadow: 0 4px 10px rgba(198, 12, 48, 0.4); letter-spacing: 0.5px; }
+.btn.big:disabled { box-shadow: none; }
+.choice.selected { box-shadow: 0 3px 8px rgba(0, 51, 141, 0.4); }
+
+/* Number boxes stay high contrast so they are easy to see */
+.num, .date, .text, .select { border-color: var(--primary); background: #fff; }
+
+/* Banners */
+.banner { border-width: 2px; border-left-width: 8px; }
+
+/* Tab bar: blue with a red top edge; active tab is red with a white marker */
+.tabbar { box-shadow: 0 -3px 10px rgba(0, 20, 70, 0.25); }
+.tab.active { box-shadow: inset 0 4px 0 #fff; }
+
+/* Offline notice under the header */
+.offline { margin: 0; padding: 10px 16px; background: #fff3c4; color: #3a2a00; font-weight: 700; text-align: center; border-bottom: 2px solid #b38600; }
+
+/* ---- OneDrive sync ---- */
+.syncbar {
+  display: block; width: 100%; min-height: 48px; padding: 8px 16px; font: inherit; font-size: 18px; font-weight: 700;
+  border: 0; border-bottom: 2px solid; cursor: pointer; text-align: center;
+}
+.syncbar.ok { background: #e3f4e7; color: #0a5c1f; border-color: #0a5c1f; }
+.syncbar.warn { background: #fff3c4; color: #3a2a00; border-color: #b38600; }
+.syncbar.bad { background: #fdeaea; color: #8a0000; border-color: #a00000; }
+.syncbar.busy { background: #e7eefc; color: var(--primary); border-color: var(--primary); }
+.folder-row { padding: 10px 0; border-top: 1px solid #b9c6e4; }
+.folder-row strong { display: block; font-size: 20px; word-break: break-word; }
+.filebtn { text-align: center; line-height: 32px; cursor: pointer; }
+.filebtn input { display: none; }
